@@ -2,17 +2,55 @@ pragma solidity 0.6.6;
 
 import "./pause.sol";
 
+/**
+ * @dev Interface of the contract capable of checking if an instruction is
+ * confirmed over at Incognito Chain
+ */
+interface Incognito {
+    function instructionApproved(
+        bool,
+        bytes32,
+        uint,
+        bytes32[] calldata,
+        bool[] calldata,
+        bytes32,
+        bytes32,
+        uint[] calldata,
+        uint8[] calldata,
+        bytes32[] calldata,
+        bytes32[] calldata
+    ) external view returns (bool);
+}
+
 contract Delegator is AdminPausable {
 
     address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
     address public delegator;
+    Incognito incognito;
+    bool notEntered = true;
 
-    constructor(address _admin, address _delegator) public {
+    /**
+     * @dev Prevents a contract from calling itself, directly or indirectly.
+     * Calling a `nonReentrant` function from another `nonReentrant`
+     * function is not supported. It is possible to prevent this from happening
+     * by making the `nonReentrant` function external, and make it call a
+     * `private` function that does the actual work.
+     */
+    modifier nonReentrant() {
+        // On the first call to nonReentrant, notEntered will be true
+        require(notEntered, "can not reentrant");
+
+        // Any calls to nonReentrant after this point will fail
+        notEntered = false;
+        _;
+    }
+
+    constructor(address _admin, address _delegator, Incognito _incognito) public {
         require(_admin != address(0) && _delegator != address(0));
         admin = _admin;
-        paused = false;
-        expire = block.timestamp + 365 * 1 days;
+        expire = block.timestamp + 365 * 3 days;
         delegator = _delegator;
+        incognito = _incognito;
     }
 
     /**
@@ -20,33 +58,21 @@ contract Delegator is AdminPausable {
      */
     receive() external payable {}
 
-    fallback() external payable {
-        address _target = delegator;
+    fallback() nonReentrant external payable {
+        (bool success,) = delegator.delegatecall(msg.data);
+        require(success, "delegate call reverted");
+
+        // By storing the original value once again, a refund is triggered (see
+        // https://eips.ethereum.org/EIPS/eip-2200)
+        notEntered = true;
         assembly {
-            // 0x40 is the address where the next free memory slot is stored in Solidity
-            let _calldataMemoryOffset := mload(0x40)
-            let _calldatasize := calldatasize()
-            // new "memory end" including padding. The bitwise operations here ensure we get rounded up to the nearest 32 byte boundary
-            let _size := and(add(_calldatasize, 0x1f), not(0x1f))
-            // Update the pointer at 0x40 to point at new free memory location so any theoretical allocation doesn't stomp our memory in this call
-            mstore(0x40, add(_calldataMemoryOffset, _size))
-            // Copy method signature and parameters of this call into memory
-            calldatacopy(_calldataMemoryOffset, 0x0, _calldatasize)
-            // Call the actual method via delegation
-            let _retval := delegatecall(gas(), _target, _calldataMemoryOffset, _calldatasize, 0, 0)
-            switch _retval
-            case 0 {
-                // 0 == it threw, so we revert
-                revert(0,0)
-            } default {
-                // If the call succeeded return the return data from the delegate call
-                let _returndataMemoryOffset := mload(0x40)
-                let _returndatasize := returndatasize()
-                // Update the pointer at 0x40 again to point at new free memory location so any theoretical allocation doesn't stomp our memory in this call
-                mstore(0x40, add(_returndataMemoryOffset, _returndatasize))
-                returndatacopy(_returndataMemoryOffset, 0x0, _returndatasize)
-                return(_returndataMemoryOffset, returndatasize())
-            }
+            // If the call succeeded return the return data from the delegate call
+            let _returndataMemoryOffset := mload(0x40)
+            let _returndatasize := returndatasize()
+            // Update the pointer at 0x40 again to point at new free memory location so any theoretical allocation doesn't stomp our memory in this call
+            mstore(0x40, add(_returndataMemoryOffset, _returndatasize))
+            returndatacopy(_returndataMemoryOffset, 0x0, _returndatasize)
+            return(_returndataMemoryOffset, returndatasize())
         }
     }
 }

@@ -8,29 +8,29 @@ import "./pause.sol";
  * Math operations with safety checks
  */
 library SafeMath {
-  function safeMul(uint256 a, uint256 b) internal pure returns (uint256) {
-    uint256 c = a * b;
-    require(a == 0 || c / a == b);
-    return c;
-  }
+    function safeMul(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 c = a * b;
+        require(a == 0 || c / a == b);
+        return c;
+    }
 
-  function safeDiv(uint256 a, uint256 b) internal pure returns (uint256) {
-    require(b > 0);
-    uint256 c = a / b;
-    require(a == b * c + a % b);
-    return c;
-  }
+    function safeDiv(uint256 a, uint256 b) internal pure returns (uint256) {
+        require(b > 0);
+        uint256 c = a / b;
+        require(a == b * c + a % b);
+        return c;
+    }
 
-  function safeSub(uint256 a, uint256 b) internal pure returns (uint256) {
-    require(b <= a);
-    return a - b;
-  }
+    function safeSub(uint256 a, uint256 b) internal pure returns (uint256) {
+        require(b <= a);
+        return a - b;
+    }
 
-  function safeAdd(uint256 a, uint256 b) internal pure returns (uint256) {
-    uint256 c = a + b;
-    require(c>=a && c>=b);
-    return c;
-  }
+    function safeAdd(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 c = a + b;
+        require(c>=a && c>=b);
+        return c;
+    }
 }
 
 
@@ -57,8 +57,9 @@ interface Incognito {
 contract PortalV3 is AdminPausable {
     address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
     address public delegator;
-
     Incognito incognito;
+    bool notEntered = true;
+
     using SafeMath for uint;
     mapping(bytes32 => bool) public withdrawed;
     struct BurnInstData {
@@ -69,41 +70,19 @@ contract PortalV3 is AdminPausable {
         uint amount; // burned amount (on Incognito)
         bytes32 itx; // Incognito's burning tx
     }
-    bool notEntered = true;
 
     event Deposit(address tokenID, string custodianIncAddress, uint amount);
     event Withdraw(address token, address to, uint amount);
     event Delegator(address);
     event IncognitoProxy(address);
 
-    /**
-     * @dev Prevents a contract from calling itself, directly or indirectly.
-     * Calling a `nonReentrant` function from another `nonReentrant`
-     * function is not supported. It is possible to prevent this from happening
-     * by making the `nonReentrant` function external, and make it call a
-     * `private` function that does the actual work.
-     */
-    modifier nonReentrant() {
-        // On the first call to nonReentrant, notEntered will be true
-        require(notEntered, "can not reentrant");
-
-        // Any calls to nonReentrant after this point will fail
-        notEntered = false;
-
-        _;
-
-        // By storing the original value once again, a refund is triggered (see
-        // https://eips.ethereum.org/EIPS/eip-2200)
-        notEntered = true;
-    }
-
-    function deposit(string calldata custodianIncAddress) isNotPaused nonReentrant payable external {
+    function deposit(string calldata custodianIncAddress) isNotPaused  payable external {
         require(address(this).balance <= 10 ** 27, "max value reached");
 
         emit Deposit(ETH_TOKEN, custodianIncAddress, msg.value);
     }
 
-    function depositERC20(address token, uint amount, string calldata custodianIncAddress) isNotPaused nonReentrant external {
+    function depositERC20(address token, uint amount, string calldata custodianIncAddress) isNotPaused external {
         IERC20 erc20Interface = IERC20(token);
         uint8 decimals = getDecimals(address(token));
         uint tokenBalance = erc20Interface.balanceOf(address(this));
@@ -144,18 +123,18 @@ contract PortalV3 is AdminPausable {
 
         // Verify instruction on beacon
         require(incognito.instructionApproved(
-            true, // Only check instruction on beacon
-            beaconInstHash,
-            heights,
-            instPaths,
-            instPathIsLefts,
-            instRoots,
-            blkData,
-            sigIdxs,
-            sigVs,
-            sigRs,
-            sigSs
-        ), "invalid instruction data");
+                true, // Only check instruction on beacon
+                beaconInstHash,
+                heights,
+                instPaths,
+                instPathIsLefts,
+                instRoots,
+                blkData,
+                sigIdxs,
+                sigVs,
+                sigRs,
+                sigSs
+            ), "invalid instruction data");
     }
 
     function withdrawLockedTokens(
@@ -169,7 +148,7 @@ contract PortalV3 is AdminPausable {
         uint8[] memory sigVs,
         bytes32[] memory sigRs,
         bytes32[] memory sigSs
-    ) isNotPaused nonReentrant public {
+    ) isNotPaused public {
         BurnInstData memory data = parseBurnInst(inst);
         require((data.meta == 300 || data.meta == 301) && data.shard == 1); // Check instruction type
         // Not withdrawed
@@ -199,8 +178,8 @@ contract PortalV3 is AdminPausable {
 
         // Send and notify
         if (data.token == ETH_TOKEN) {
-          (bool success, ) =  data.to.call{value: data.amount}("");
-          require(success, "internal transaction error");
+            (bool success, ) =  data.to.call{value: data.amount}("");
+            require(success, "internal transaction error");
         } else {
             IERC20(data.token).transfer(data.to, data.amount);
             require(checkSuccess(), "internal transaction error");
@@ -239,54 +218,54 @@ contract PortalV3 is AdminPausable {
      * @dev Update delegator address
      * @param _delegator: delegator address
      */
-     function updateDelegatorAddress(address _delegator) external onlyAdmin isPaused {
+    function updateDelegatorAddress(address _delegator) external onlyAdmin isPaused {
         delegator = _delegator;
 
         Delegator(delegator);
-     }
+    }
 
     /**
      * @dev Update incognito proxy address
      * @param _incognitoProxy: incognito proxy address
      */
-     function updateIncognitoAddress(address _incognitoProxy) external onlyAdmin isPaused {
+    function updateIncognitoAddress(address _incognitoProxy) external onlyAdmin isPaused {
         incognito = Incognito(_incognitoProxy);
 
         IncognitoProxy(delegator);
-     }
-     
-     /**
-     * @dev Check if transfer() and transferFrom() of ERC20 succeeded or not
-     * This check is needed to fix https://github.com/ethereum/solidity/issues/4116
-     * This function is copied from https://github.com/AdExNetwork/adex-protocol-eth/blob/master/contracts/libs/SafeERC20.sol
-     */
+    }
+
+    /**
+    * @dev Check if transfer() and transferFrom() of ERC20 succeeded or not
+    * This check is needed to fix https://github.com/ethereum/solidity/issues/4116
+    * This function is copied from https://github.com/AdExNetwork/adex-protocol-eth/blob/master/contracts/libs/SafeERC20.sol
+    */
     function checkSuccess() private pure returns (bool) {
-		uint256 returnValue = 0;
-		assembly {
-			// check number of bytes returned from last function call
-			switch returndatasize()
+        uint256 returnValue = 0;
+        assembly {
+        // check number of bytes returned from last function call
+            switch returndatasize()
 
-			// no bytes returned: assume success
-			case 0x0 {
-				returnValue := 1
-			}
+            // no bytes returned: assume success
+            case 0x0 {
+                returnValue := 1
+            }
 
-			// 32 bytes returned: check if non-zero
-			case 0x20 {
-				// copy 32 bytes into scratch space
-				returndatacopy(0x0, 0x0, 0x20)
+            // 32 bytes returned: check if non-zero
+            case 0x20 {
+            // copy 32 bytes into scratch space
+                returndatacopy(0x0, 0x0, 0x20)
 
-				// load those bytes into returnValue
-				returnValue := mload(0x0)
-			}
+            // load those bytes into returnValue
+                returnValue := mload(0x0)
+            }
 
-			// not sure what was returned: don't mark as success
-			default { }
-		}
-		return returnValue != 0;
-	}
-	
-	/**
+            // not sure what was returned: don't mark as success
+            default { }
+        }
+        return returnValue != 0;
+    }
+
+    /**
      * @dev Get the decimals of an ERC20 token, return 0 if it isn't defined
      * We check the returndatasize to covert both cases that the token has
      * and doesn't have the function decimals()
