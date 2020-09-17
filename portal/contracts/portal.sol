@@ -57,7 +57,7 @@ interface Incognito {
 contract PortalV3 is AdminPausable {
     address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
     address public delegator;
-    Incognito incognito;
+    Incognito public incognito;
     bool notEntered = true;
 
     using SafeMath for uint;
@@ -150,7 +150,7 @@ contract PortalV3 is AdminPausable {
         bytes32[] memory sigSs
     ) isNotPaused public {
         BurnInstData memory data = parseBurnInst(inst);
-        require((data.meta == 300 || data.meta == 301) && data.shard == 1); // Check instruction type
+        require((data.meta == 119 || data.meta == 200) && data.shard == 1); // Check instruction type
         // Not withdrawed
         require(!withdrawed[data.itx], "withdraw transaction already used");
         withdrawed[data.itx] = true;

@@ -3,11 +3,16 @@ package main
 import (
 	"context"
 	"crypto/ecdsa"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/incognitochain/bridge-eth/blockchain"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
+	"github.com/incognitochain/bridge-eth/consensus/signatureschemes/bridgesig"
+	"github.com/incognitochain/bridge-eth/jsonresult"
 	"github.com/incognitochain/portal3-eth/portal/portalv3"
+	"golang.org/x/crypto/sha3"
 	"math/big"
 	"strings"
 	"time"
@@ -91,6 +96,51 @@ type portalV3Base struct {
 	sc *contracts
 	p  *Platform
 	c  *committees
+}
+
+type getProofResult struct {
+	Result jsonresult.GetInstructionProof
+	Error  struct {
+		Code       int
+		Message    string
+		StackTrace string
+	}
+}
+
+type decodedProof struct {
+	Instruction []byte
+	Heights     [2]*big.Int
+
+	InstPaths       [2][][32]byte
+	InstPathIsLefts [2][]bool
+	InstRoots       [2][32]byte
+	BlkData         [2][32]byte
+	SigIdxs         [2][]*big.Int
+	SigVs           [2][]uint8
+	SigRs           [2][][32]byte
+	SigSs           [2][][32]byte
+}
+
+type instProof struct {
+	isBeacon       bool
+	instHash       [32]byte
+	blkHeight      *big.Int
+	instPath       [][32]byte
+	instPathIsLeft []bool
+	instRoot       [32]byte
+	blkData        [32]byte
+	sigIdx         []*big.Int
+	sigV           []uint8
+	sigR           [][32]byte
+	sigS           [][32]byte
+}
+
+type merklePath struct {
+	merkles [][]byte
+	leaf    [32]byte
+	root    [32]byte
+	path    [][32]byte
+	left    []bool
 }
 
 func init() {
@@ -234,6 +284,7 @@ func setup(
 	if err != nil {
 		return nil, err
 	}
+	sim.Commit()
 
 	p.portalV3Ins, err = portalv3.NewPortalv3(p.delegatorAddr, sim)
 	if err != nil {
@@ -539,4 +590,161 @@ func deposit(p *Platform, amount *big.Int) (*big.Int, *big.Int, error) {
 func (p *Platform) getBalance(addr common.Address) *big.Int {
 	bal, _ := p.sim.BalanceAt(context.Background(), addr, nil)
 	return bal
+}
+
+func buildWithdrawTestcase(c *committees, meta, shard int, tokenID common.Address, amount *big.Int, withdrawer common.Address) (*decodedProof, [32]byte) {
+	inst, mp, blkData, blkHash := buildWithdrawData(meta, shard, tokenID, amount, withdrawer)
+	ipBeacon := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
+	return &decodedProof{
+		Instruction: inst,
+		Heights:     [2]*big.Int{big.NewInt(1), big.NewInt(1)},
+
+		InstPaths:       [2][][32]byte{ipBeacon.instPath},
+		InstPathIsLefts: [2][]bool{ipBeacon.instPathIsLeft},
+		InstRoots:       [2][32]byte{ipBeacon.instRoot},
+		BlkData:         [2][32]byte{ipBeacon.blkData},
+		SigIdxs:         [2][]*big.Int{ipBeacon.sigIdx},
+		SigVs:           [2][]uint8{ipBeacon.sigV},
+		SigRs:           [2][][32]byte{ipBeacon.sigR},
+		SigSs:           [2][][32]byte{ipBeacon.sigS},
+	}, ipBeacon.instHash
+}
+
+func buildWithdrawData(meta, shard int, tokenID common.Address, amount *big.Int, withdrawer common.Address) ([]byte, *merklePath, []byte, []byte) {
+	// Build instruction merkle tree
+	numInst := 10
+	startNodeID := 7
+	height := big.NewInt(1)
+	inst := buildDecodedWithdrawInst(meta, shard, tokenID, withdrawer, amount)
+	instWithHeight := append(inst, toBytes32BigEndian(height.Bytes())...)
+	data := randomMerkleHashes(numInst)
+	data[startNodeID] = instWithHeight
+	mp := buildInstructionMerklePath(data, numInst, startNodeID)
+
+	// Generate random blkHash
+	h := randomMerkleHashes(1)
+	blkData := h[0]
+	blkHash := rawsha3(append(blkData, mp.root[:]...))
+	return inst, mp, blkData, blkHash[:]
+}
+
+func buildDecodedWithdrawInst(meta, shard int, tokenID, withdrawer common.Address, amount *big.Int) []byte {
+	decoded := []byte{byte(meta)}
+	decoded = append(decoded, byte(shard))
+	decoded = append(decoded, toBytes32BigEndian(tokenID[:])...)
+	decoded = append(decoded, toBytes32BigEndian(withdrawer[:])...)
+	decoded = append(decoded, toBytes32BigEndian(amount.Bytes())...)
+	txId := make([]byte, 32)
+	rand.Read(txId)
+	decoded = append(decoded, toBytes32BigEndian(txId)...) // txID
+	decoded = append(decoded, make([]byte, 16)...)         // incTokenID, variable length
+	return decoded
+}
+
+func signAndReturnInstProof(
+	privs [][]byte,
+	isBeacon bool,
+	mp *merklePath,
+	blkData []byte,
+	blkHash []byte,
+) *instProof {
+	sigV := make([]uint8, len(privs))
+	sigR := make([][32]byte, len(privs))
+	sigS := make([][32]byte, len(privs))
+	sigIdx := make([]*big.Int, len(privs))
+	for i, p := range privs {
+		sig, _ := bridgesig.Sign(p, blkHash)
+		sigV[i] = uint8(sig[64] + 27)
+		sigR[i] = toByte32(sig[:32])
+		sigS[i] = toByte32(sig[32:64])
+		sigIdx[i] = big.NewInt(int64(i))
+	}
+
+	return &instProof{
+		isBeacon:       isBeacon,
+		instHash:       mp.leaf,
+		blkHeight:      big.NewInt(0),
+		instPath:       mp.path,
+		instPathIsLeft: mp.left,
+		instRoot:       mp.root,
+		blkData:        toByte32(blkData),
+		sigIdx:         sigIdx,
+		sigV:           sigV,
+		sigR:           sigR,
+		sigS:           sigS,
+	}
+}
+
+func buildInstructionMerklePath(data [][]byte, numInst, startNodeID int) *merklePath {
+	merkles := blockchain.BuildKeccak256MerkleTree(data)
+	p, l := blockchain.GetKeccak256MerkleProofFromTree(merkles, startNodeID)
+	path := [][32]byte{}
+	left := []bool{}
+	for i, x := range p {
+		path = append(path, toByte32(x))
+		left = append(left, l[i])
+	}
+
+	return &merklePath{
+		merkles: merkles,
+		leaf:    toByte32(merkles[startNodeID]),
+		root:    toByte32(merkles[len(merkles)-1]),
+		path:    path,
+		left:    left,
+	}
+}
+
+func Withdraw(v *portalv3.Portalv3, auth *bind.TransactOpts, proof *decodedProof) (*types.Transaction, error) {
+	// auth.GasPrice = big.NewInt(20000000000)
+	tx, err := v.WithdrawLockedTokens(
+		auth,
+		proof.Instruction,
+		proof.Heights[0],
+
+		proof.InstPaths[0],
+		proof.InstPathIsLefts[0],
+		proof.InstRoots[0],
+		proof.BlkData[0],
+		proof.SigIdxs[0],
+		proof.SigVs[0],
+		proof.SigRs[0],
+		proof.SigSs[0],
+	)
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
+}
+
+func toBytes32BigEndian(b []byte) []byte {
+	a := copyToBytes32(b)
+	return a[:]
+}
+
+func copyToBytes32(b []byte) [32]byte {
+	a := [32]byte{}
+	copy(a[32-len(b):], b)
+	return a
+}
+
+func toByte32(s []byte) [32]byte {
+	a := [32]byte{}
+	copy(a[:], s)
+	return a
+}
+func randomMerkleHashes(n int) [][]byte {
+	h := [][]byte{}
+	for i := 0; i < n; i++ {
+		b := make([]byte, 32)
+		rand.Read(b)
+		h = append(h, b)
+	}
+	return h
+}
+
+func rawsha3(b []byte) []byte {
+	hashF := sha3.NewLegacyKeccak256()
+	hashF.Write(b)
+	buf := hashF.Sum(nil)
+	return buf
 }

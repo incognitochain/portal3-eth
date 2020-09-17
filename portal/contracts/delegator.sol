@@ -26,7 +26,7 @@ contract Delegator is AdminPausable {
 
     address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
     address public delegator;
-    Incognito incognito;
+    Incognito public incognito;
     bool notEntered = true;
 
     /**
