@@ -17,9 +17,6 @@ import (
 	"strings"
 	"time"
 
-	// "github.com/stretchr/testify/require"
-	// "github.com/stretchr/testify/suite"
-	// "github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	"github.com/ethereum/go-ethereum/common"
@@ -43,7 +40,6 @@ var auth *bind.TransactOpts
 var genesisAcc *account
 
 const (
-	IncPaymentAddr    = "12S5YAYzDr75NJWa4YoUDB9d2c2GKQMREtkRL19JrnZngnkwahP6aBDz7qnKHBGLmDpp2FUA7yqa58fuMqoaUHtE97FRvReBMssWMWm"
 	DepositERC20Topic = "0x2d4b597935f3cd67fb2eebf1db4debc934cee5c7baa7153f980fdbeb2e74084e"
 )
 
