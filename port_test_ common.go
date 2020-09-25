@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	"github.com/ethereum/go-ethereum/common"
@@ -743,4 +744,32 @@ func rawsha3(b []byte) []byte {
 	hashF.Write(b)
 	buf := hashF.Sum(nil)
 	return buf
+}
+
+func transfer(
+	client *ethclient.Client,
+	privKey *ecdsa.PrivateKey,
+	to string,
+	nonce uint64,
+	value *big.Int,
+	gasLimit uint64,
+	gasPrice *big.Int,
+) (string, error) {
+	toAddress := common.HexToAddress(to)
+	tx := types.NewTransaction(nonce, toAddress, value, gasLimit, gasPrice, nil)
+
+	chainID, err := client.NetworkID(context.Background())
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privKey)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	err = client.SendTransaction(context.Background(), signedTx)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return signedTx.Hash().String(), nil
 }

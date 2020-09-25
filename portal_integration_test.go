@@ -1,24 +1,25 @@
 package main
 
 import (
+	"crypto/ecdsa"
 	"fmt"
 	"math/big"
+	"net/http"
+	"os/exec"
 	"testing"
 	"time"
-	"crypto/ecdsa"
-	"os/exec"
+	"context"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/stretchr/testify/suite"
-	"github.com/stretchr/testify/require"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/incognitochain/portal3-eth/portal/delegator"
 	"github.com/incognitochain/portal3-eth/portal/incognitoproxy"
 	"github.com/incognitochain/portal3-eth/portal/portalv3"
-
 )
 
 // Define the suite, and absorb the built-in basic suite
@@ -49,6 +50,14 @@ type PortalIntegrationTestSuite struct {
 func NewPortalIntegrationTestSuite(tradingTestSuite *PortalV3BaseTestSuite) *PortalIntegrationTestSuite {
 	return &PortalIntegrationTestSuite{
 		PortalV3BaseTestSuite: tradingTestSuite,
+	}
+}
+
+func(pg *PortalIntegrationTestSuite) genBlock() {
+	for i := 0; i < 16; i++ {
+		nonce, err := pg.ETHClient.PendingNonceAt(context.Background(), pg.auth.From)
+		require.Equal(pg.T(), nil, err)
+		transfer(pg.ETHClient, pg.ETHPrivKey, pg.auth.From.Hex(), nonce, big.NewInt(0), uint64(21000), big.NewInt(5000000000))
 	}
 }
 
@@ -97,21 +106,32 @@ func (pg *PortalIntegrationTestSuite) SetupSuite() {
 	require.Equal(pg.T(), nil, err)
 	fmt.Printf("delegator address: %s\n", pg.Portalv3.Hex())
 
+	//get portalv3 ip 
+	ipAddress, err := exec.Command("/bin/sh", "-c", "docker inspect -f \"{{ .NetworkSettings.IPAddress }}\" portalv3").Output()
+	require.Equal(pg.T(), nil, err)
+
 	// run incognito chain
-	incogitoWithArgument := fmt.Sprintf("docker run -d -p 9334:9334 -p 9338:9338 --name incognito incognito %v", pg.Portalv3.Hex())
+	incogitoWithArgument := fmt.Sprintf("docker run -d -p 9334:9334 -p 9338:9338 --name incognito incognito %v %v", pg.Portalv3.Hex(), string(ipAddress))
 	_, err = exec.Command("/bin/sh", "-c", incogitoWithArgument).Output()
 	require.Equal(pg.T(), nil, err)
-	time.Sleep(15 * time.Second)
+
+	for {
+		time.Sleep(15 * time.Second)
+		if checkRepsonse(pg.IncBridgeHost) {
+			break
+		}
+	}
+
 }
 
 func (pg *PortalIntegrationTestSuite) TearDownSuite() {
 	fmt.Println("Tearing down the suite...")
-	// _, err := exec.Command("/bin/sh", "-c", "docker rm -f portalv3").Output()
-	// require.Equal(pg.T(), nil, err)
-	// pg.ETHClient.Close()
+	_, err := exec.Command("/bin/sh", "-c", "docker rm -f portalv3").Output()
+	require.Equal(pg.T(), nil, err)
+	pg.ETHClient.Close()
 
-	// _, err = exec.Command("/bin/sh", "-c", "docker rm -f incognito").Output()
-	// require.Equal(pg.T(), nil, err)
+	_, err = exec.Command("/bin/sh", "-c", "docker rm -f incognito").Output()
+	require.Equal(pg.T(), nil, err)
 }
 
 func (pg *PortalIntegrationTestSuite) SetupTest() {
@@ -152,8 +172,9 @@ func (pg *PortalIntegrationTestSuite) Test1CustodianDeposit() {
 	require.Equal(pg.T(), nil, err)
 	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
 
-	fmt.Println("Waiting 15s for 15 blocks confirmation")
-	time.Sleep(10 * time.Second)
+	fmt.Println("Generate blocks to pass 15 confirmations ")
+	pg.genBlock()
+
 	_, err = pg.callCustodianDeposit(
 		pg.IncEtherTokenIDStr,
 		ethDepositProof,
@@ -161,7 +182,6 @@ func (pg *PortalIntegrationTestSuite) Test1CustodianDeposit() {
 		ethTxIdx,
 	)
 	require.Equal(pg.T(), nil, err)
-	time.Sleep(120 * time.Second)
 }
 
 func ethInstance(ethPrivate string, ethEnpoint string) (*ecdsa.PrivateKey, *ethclient.Client, error) {
@@ -179,3 +199,13 @@ func ethInstance(ethPrivate string, ethEnpoint string) (*ecdsa.PrivateKey, *ethc
 	}
 	return privKey, client, nil
 }
+
+func checkRepsonse(url string) bool {
+	resp, err := http.Get(url)
+	if err != nil || resp == nil {
+		fmt.Println("Incognito chain is running please wait...")
+		return false
+	}
+	return true
+}
+
