@@ -1,6 +1,6 @@
 FROM golang:1.15
 
-RUN apt-get update && apt-get upgrade
+RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y git supervisor 
 RUN git clone --depth 1 --branch portalv3 https://github.com/incognitochain/incognito-chain
 RUN git clone https://github.com/incognitochain/incognito-highway && \

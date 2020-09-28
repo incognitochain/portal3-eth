@@ -6,7 +6,7 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/aristanetworks/goarista v0.0.0-20200812190859-4cb0e71f3c0e // indirect
 	github.com/btcsuite/btcd v0.21.0-beta // indirect
-	github.com/ethereum/go-ethereum v1.9.21
+	github.com/ethereum/go-ethereum v1.9.12
 	github.com/gballet/go-libpcsclite v0.0.0-20191108122812-4678299bea08 // indirect
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/google/uuid v1.1.2 // indirect

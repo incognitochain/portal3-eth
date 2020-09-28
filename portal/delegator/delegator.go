@@ -478,44 +478,44 @@ func (_Delegator *DelegatorTransactorSession) Unpause() (*types.Transaction, err
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
-func (_Delegator *DelegatorTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
-	return _Delegator.contract.RawTransact(opts, calldata)
-}
+// func (_Delegator *DelegatorTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
+// 	return _Delegator.contract.RawTransact(opts, calldata)
+// }
 
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_Delegator *DelegatorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _Delegator.Contract.Fallback(&_Delegator.TransactOpts, calldata)
-}
+// // Fallback is a paid mutator transaction binding the contract fallback function.
+// //
+// // Solidity: fallback() payable returns()
+// func (_Delegator *DelegatorSession) Fallback(calldata []byte) (*types.Transaction, error) {
+// 	return _Delegator.Contract.Fallback(&_Delegator.TransactOpts, calldata)
+// }
 
-// Fallback is a paid mutator transaction binding the contract fallback function.
-//
-// Solidity: fallback() payable returns()
-func (_Delegator *DelegatorTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
-	return _Delegator.Contract.Fallback(&_Delegator.TransactOpts, calldata)
-}
+// // Fallback is a paid mutator transaction binding the contract fallback function.
+// //
+// // Solidity: fallback() payable returns()
+// func (_Delegator *DelegatorTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
+// 	return _Delegator.Contract.Fallback(&_Delegator.TransactOpts, calldata)
+// }
 
-// Receive is a paid mutator transaction binding the contract receive function.
-//
-// Solidity: receive() payable returns()
-func (_Delegator *DelegatorTransactor) Receive(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Delegator.contract.RawTransact(opts, nil) // calldata is disallowed for receive function
-}
-
-// Receive is a paid mutator transaction binding the contract receive function.
-//
-// Solidity: receive() payable returns()
-func (_Delegator *DelegatorSession) Receive() (*types.Transaction, error) {
-	return _Delegator.Contract.Receive(&_Delegator.TransactOpts)
-}
+// // Receive is a paid mutator transaction binding the contract receive function.
+// //
+// // Solidity: receive() payable returns()
+// func (_Delegator *DelegatorTransactor) Receive(opts *bind.TransactOpts) (*types.Transaction, error) {
+// 	return _Delegator.contract.RawTransact(opts, nil) // calldata is disallowed for receive function
+// }
 
 // Receive is a paid mutator transaction binding the contract receive function.
 //
 // Solidity: receive() payable returns()
-func (_Delegator *DelegatorTransactorSession) Receive() (*types.Transaction, error) {
-	return _Delegator.Contract.Receive(&_Delegator.TransactOpts)
-}
+// func (_Delegator *DelegatorSession) Receive() (*types.Transaction, error) {
+// 	return _Delegator.Contract.Receive(&_Delegator.TransactOpts)
+// }
+
+// // Receive is a paid mutator transaction binding the contract receive function.
+// //
+// // Solidity: receive() payable returns()
+// func (_Delegator *DelegatorTransactorSession) Receive() (*types.Transaction, error) {
+// 	return _Delegator.Contract.Receive(&_Delegator.TransactOpts)
+// }
 
 // DelegatorClaimIterator is returned from FilterClaim and is used to iterate over the raw logs and unpacked data for Claim events raised by the Delegator contract.
 type DelegatorClaimIterator struct {
