@@ -104,6 +104,7 @@ func (pg *PortalIntegrationTestSuite) SetupSuite() {
 	pg.Portalv3, _, _, err = delegator.DeployDelegator(pg.auth, pg.ETHClient, pg.auth.From, portalv3Logic, incAddr)
 	require.Equal(pg.T(), nil, err)
 	fmt.Printf("delegator address: %s\n", pg.Portalv3.Hex())
+	//pg.Portalv3 = common.HexToAddress("0x1B4c8873Fd83aB7E2eaB66cDB238F884827a61d4")
 
 	//get portalv3 ip
 	ipAddress, err := exec.Command("/bin/sh", "-c", "docker inspect -f \"{{ .NetworkSettings.IPAddress }}\" portalv3").Output()
@@ -175,13 +176,36 @@ func (pg *PortalIntegrationTestSuite) Test1CustodianDeposit() {
 	fmt.Println("Generate blocks to pass 15 confirmations ")
 	pg.genBlock()
 
-	_, err = pg.callCustodianDeposit(
+	// Submit proof first time must pass
+	depositRes, err := pg.callCustodianDeposit(
 		pg.IncEtherTokenIDStr,
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
 	)
 	require.Equal(pg.T(), nil, err)
+	time.Sleep(30 * time.Second)
+	require.NotEqual(pg.T(), nil, depositRes)
+	TxId := depositRes["TxID"]
+	TxDepositStatus, err := getPortalCustodianDepositStatusv3(pg.IncRPCHost, TxId.(string))
+	require.Equal(pg.T(), float64(1), TxDepositStatus["Status"].(float64))
+	require.Equal(pg.T(), pg.DepositingEther*1e9, TxDepositStatus["DepositAmount"].(float64))
+	require.Equal(pg.T(), pg.EtherAddressStr, TxDepositStatus["ExternalTokenID"].(string))
+
+	// Submit the same as above proof must failed
+	depositRes, err = pg.callCustodianDeposit(
+		pg.IncEtherTokenIDStr,
+		ethDepositProof,
+		ethBlockHash,
+		ethTxIdx,
+	)
+	require.Equal(pg.T(), nil, err)
+	time.Sleep(30 * time.Second)
+	require.NotEqual(pg.T(), nil, depositRes)
+	TxId = depositRes["TxID"]
+	TxDepositStatus, err = getPortalCustodianDepositStatusv3(pg.IncRPCHost, TxId.(string))
+	require.Equal(pg.T(), float64(2), TxDepositStatus["Status"].(float64))
+
 }
 
 func ethInstance(ethPrivate string, ethEnpoint string) (*ecdsa.PrivateKey, *ethclient.Client, error) {

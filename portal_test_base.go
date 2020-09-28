@@ -35,6 +35,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type CommonRes struct {
+	rpccaller.RPCBaseRes
+	Result interface{} `json:"Result"`
+}
+
 type IssuingETHRes struct {
 	rpccaller.RPCBaseRes
 	Result interface{} `json:"Result"`
@@ -53,7 +58,6 @@ type NormalResult struct {
 	Result interface{} `json:"result"`
 }
 
-
 // Define the suite, and absorb the built-in basic suite
 // functionality from testify - including assertion methods.
 type PortalV3BaseTestSuite struct {
@@ -65,8 +69,8 @@ type PortalV3BaseTestSuite struct {
 	GeneratedPrivKeyForSC ecdsa.PrivateKey
 	GeneratedPubKeyForSC  ecdsa.PublicKey
 
-	IncBridgeHost string
-	IncRPCHost    string
+	IncBridgeHost      string
+	IncRPCHost         string
 	IncEtherTokenIDStr string
 
 	EtherAddressStr string
@@ -77,7 +81,7 @@ type PortalV3BaseTestSuite struct {
 	ETHPrivKey *ecdsa.PrivateKey
 	ETHClient  *ethclient.Client
 
-	Portalv3            common.Address
+	Portalv3             common.Address
 	KBNTradeDeployedAddr common.Address
 
 	KyberContractAddr common.Address
@@ -223,14 +227,14 @@ func (portalV3Suite *PortalV3BaseTestSuite) callCustodianDeposit(
 	ethTxIdx uint,
 ) (map[string]interface{}, error) {
 	rpcClient := rpccaller.NewRPCClient()
-	remoteAddresses :=  map[string]interface{}{
-		"6abd698ea7ddd1f98b1ecaaddab5db0453b8363ff092f0d8d7d4c6b1155fb693" : "tbnb1fau9kq605jwkyfea2knw495we8cpa47r9r6uxv",
-	} 
+	remoteAddresses := map[string]interface{}{
+		"6abd698ea7ddd1f98b1ecaaddab5db0453b8363ff092f0d8d7d4c6b1155fb693": "tbnb1fau9kq605jwkyfea2knw495we8cpa47r9r6uxv",
+	}
 	meta := map[string]interface{}{
 		"RemoteAddresses": remoteAddresses,
-		"BlockHash":  ethBlockHash,
-		"ProofStrs":  ethDepositProof,
-		"TxIndex":    ethTxIdx,
+		"BlockHash":       ethBlockHash,
+		"ProofStrs":       ethDepositProof,
+		"TxIndex":         ethTxIdx,
 	}
 	params := []interface{}{
 		portalV3Suite.IncPrivKeyStr,
@@ -426,8 +430,6 @@ func getETHDepositProof(
 	return blockNumber, blockHash, uint(txIndex), encNodeList, nil
 }
 
-
-
 // getTransactionByHashToInterface returns the transaction as a map[string]interface{} type
 func getETHTransactionByHash(
 	url string,
@@ -490,4 +492,23 @@ func getETHTransactionReceipt(url string, txHash common.Hash) (*types.Receipt, e
 		return nil, err
 	}
 	return res.Result, nil
+}
+
+func getPortalCustodianDepositStatusv3(url string, txHash string) (map[string]interface{}, error) {
+	rpcClient := rpccaller.NewRPCClient()
+	transactionId := map[string]interface{}{"DepositTxID": txHash}
+	params := []interface{}{transactionId}
+	var res CommonRes
+	err := rpcClient.RPCCall(
+		"",
+		url,
+		"",
+		"getportalcustodiandepositstatusv3",
+		params,
+		&res,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return res.Result.(map[string]interface{}), nil
 }
