@@ -28,6 +28,7 @@ contract Delegator is AdminPausable {
     address public delegator;
     Incognito public incognito;
     bool notEntered = true;
+    mapping(uint8 => uint32) public metadata;
 
     /**
      * @dev Prevents a contract from calling itself, directly or indirectly.
@@ -51,6 +52,8 @@ contract Delegator is AdminPausable {
         expire = block.timestamp + 365 * 3 days;
         delegator = _delegator;
         incognito = _incognito;
+        // init metadata type accepted
+        metadata[170] = 227; // custodian withdraw free collateral
     }
 
     /**

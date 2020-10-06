@@ -59,6 +59,7 @@ contract PortalV3 is AdminPausable {
     address public delegator;
     Incognito public incognito;
     bool notEntered = true;
+    mapping(uint8 => uint32) public metadata;
 
     using SafeMath for uint;
     mapping(bytes32 => bool) public withdrawed;
@@ -75,6 +76,7 @@ contract PortalV3 is AdminPausable {
     event Withdraw(address token, address to, uint amount);
     event Delegator(address);
     event IncognitoProxy(address);
+    event MetaData(uint8, uint32);
 
     function deposit(string calldata custodianIncAddress) isNotPaused  payable external {
         require(address(this).balance <= 10 ** 27, "max value reached");
@@ -150,7 +152,7 @@ contract PortalV3 is AdminPausable {
         bytes32[] memory sigSs
     ) isNotPaused public {
         BurnInstData memory data = parseBurnInst(inst);
-        require((data.meta == 119 || data.meta == 200) && data.shard == 1); // Check instruction type
+        require(inst.length > 0 && metadata[data.meta] > 0 && uint256(inst.length) == uint256(metadata[data.meta])); // Check instruction type
         // Not withdrawed
         require(!withdrawed[data.itx], "withdraw transaction already used");
         withdrawed[data.itx] = true;
@@ -232,6 +234,17 @@ contract PortalV3 is AdminPausable {
         incognito = Incognito(_incognitoProxy);
 
         IncognitoProxy(delegator);
+    }
+
+    /**
+     * @dev Update meta data type
+     * @param _meta: meta data type
+     * @param _value: meta data value
+     */
+    function updateMetaData(uint8 _meta, uint32 _value) external onlyAdmin {
+        metadata[_meta] = _value;
+
+        MetaData(_meta, _value);
     }
 
     /**

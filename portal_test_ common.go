@@ -17,13 +17,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/incognitochain/portal3-eth/portal/delegator"
 	"github.com/incognitochain/portal3-eth/portal/erc20"
 	"github.com/incognitochain/portal3-eth/portal/erc20/bnb"
@@ -106,16 +106,16 @@ type getProofResult struct {
 
 type decodedProof struct {
 	Instruction []byte
-	Heights     [2]*big.Int
+	Heights     *big.Int
 
-	InstPaths       [2][][32]byte
-	InstPathIsLefts [2][]bool
-	InstRoots       [2][32]byte
-	BlkData         [2][32]byte
-	SigIdxs         [2][]*big.Int
-	SigVs           [2][]uint8
-	SigRs           [2][][32]byte
-	SigSs           [2][][32]byte
+	InstPaths       [][32]byte
+	InstPathIsLefts []bool
+	InstRoots       [32]byte
+	BlkData         [32]byte
+	SigIdxs         []*big.Int
+	SigVs           []uint8
+	SigRs           [][32]byte
+	SigSs           [][32]byte
 }
 
 type instProof struct {
@@ -594,16 +594,16 @@ func buildWithdrawTestcase(c *committees, meta, shard int, tokenID common.Addres
 	ipBeacon := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
 	return &decodedProof{
 		Instruction: inst,
-		Heights:     [2]*big.Int{big.NewInt(1), big.NewInt(1)},
+		Heights:     big.NewInt(1),
 
-		InstPaths:       [2][][32]byte{ipBeacon.instPath},
-		InstPathIsLefts: [2][]bool{ipBeacon.instPathIsLeft},
-		InstRoots:       [2][32]byte{ipBeacon.instRoot},
-		BlkData:         [2][32]byte{ipBeacon.blkData},
-		SigIdxs:         [2][]*big.Int{ipBeacon.sigIdx},
-		SigVs:           [2][]uint8{ipBeacon.sigV},
-		SigRs:           [2][][32]byte{ipBeacon.sigR},
-		SigSs:           [2][][32]byte{ipBeacon.sigS},
+		InstPaths:       ipBeacon.instPath,
+		InstPathIsLefts: ipBeacon.instPathIsLeft,
+		InstRoots:       ipBeacon.instRoot,
+		BlkData:         ipBeacon.blkData,
+		SigIdxs:         ipBeacon.sigIdx,
+		SigVs:           ipBeacon.sigV,
+		SigRs:           ipBeacon.sigR,
+		SigSs:           ipBeacon.sigS,
 	}, ipBeacon.instHash
 }
 
@@ -696,16 +696,16 @@ func Withdraw(v *portalv3.Portalv3, auth *bind.TransactOpts, proof *decodedProof
 	tx, err := v.WithdrawLockedTokens(
 		auth,
 		proof.Instruction,
-		proof.Heights[0],
+		proof.Heights,
 
-		proof.InstPaths[0],
-		proof.InstPathIsLefts[0],
-		proof.InstRoots[0],
-		proof.BlkData[0],
-		proof.SigIdxs[0],
-		proof.SigVs[0],
-		proof.SigRs[0],
-		proof.SigSs[0],
+		proof.InstPaths,
+		proof.InstPathIsLefts,
+		proof.InstRoots,
+		proof.BlkData,
+		proof.SigIdxs,
+		proof.SigVs,
+		proof.SigRs,
+		proof.SigSs,
 	)
 	if err != nil {
 		return nil, err

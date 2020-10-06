@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/params"
 	"github.com/incognitochain/portal3-eth/portal/delegator"
 	"github.com/incognitochain/portal3-eth/portal/incognitoproxy"
 	"github.com/incognitochain/portal3-eth/portal/portalv3"
@@ -44,6 +45,7 @@ type PortalIntegrationTestSuite struct {
 	KBNBalanceAfterStep1  *big.Int
 	SALTBalanceAfterStep2 *big.Int
 	auth                  *bind.TransactOpts
+	portalV3Inst          *portalv3.Portalv3
 }
 
 func NewPortalIntegrationTestSuite(tradingTestSuite *PortalV3BaseTestSuite) *PortalIntegrationTestSuite {
@@ -74,7 +76,7 @@ func (pg *PortalIntegrationTestSuite) SetupSuite() {
 	pg.SALTAddressStr = "0x6fEE5727EE4CdCBD91f3A873ef2966dF31713A04" // kovan
 	pg.OMGAddressStr = "0xdB7ec4E4784118D9733710e46F7C83fE7889596a"  // kovan
 	pg.SNTAddressStr = "0x4c99B04682fbF9020Fcb31677F8D8d66832d3322"  // kovan
-	pg.DepositingEther = float64(0.05)
+	pg.DepositingEther = float64(5)
 	pg.ETHPrivKeyStr = "1ABA488300A9D7297A315D127837BE4219107C62C61966ECDF7A75431D75CC61"
 	pg.ETHHost = "http://localhost:8545"
 
@@ -104,6 +106,8 @@ func (pg *PortalIntegrationTestSuite) SetupSuite() {
 	pg.Portalv3, _, _, err = delegator.DeployDelegator(pg.auth, pg.ETHClient, pg.auth.From, portalv3Logic, incAddr)
 	require.Equal(pg.T(), nil, err)
 	fmt.Printf("delegator address: %s\n", pg.Portalv3.Hex())
+	pg.portalV3Inst, err = portalv3.NewPortalv3(pg.Portalv3, pg.ETHClient)
+	require.Equal(pg.T(), nil, err)
 	//pg.Portalv3 = common.HexToAddress("0x1B4c8873Fd83aB7E2eaB66cDB238F884827a61d4")
 
 	//get portalv3 ip
@@ -206,6 +210,62 @@ func (pg *PortalIntegrationTestSuite) Test1CustodianDeposit() {
 	TxDepositStatus, err = getPortalCustodianDepositStatusv3(pg.IncRPCHost, TxId.(string))
 	require.Equal(pg.T(), float64(2), TxDepositStatus["Status"].(float64))
 
+}
+
+func (pg *PortalIntegrationTestSuite) Test2CustodianWithdraw() {
+	fmt.Println("============ TEST CUSTODIAN WITHDRAW ===========")
+	fmt.Println("------------ STEP 0: declaration & initialization --------------")
+	// depositAmount := big.NewInt(int64(pg.DepositingEther * params.Ether))
+	fmt.Println("------------ STEP 1: Custodian Withdraw pETH --------------")
+
+	// Custodian Create withdraw request
+	withdrawRes, err := pg.callCustodianWithdraw(
+		pg.IncPrivKeyStr,
+		pg.IncPaymentAddrStr,
+		pg.ETHOwnerAddrStr,
+		pg.EtherAddressStr,
+		big.NewInt(int64(pg.DepositingEther*params.Ether/2e9)).String(),
+	)
+	require.Equal(pg.T(), nil, err)
+	time.Sleep(30 * time.Second)
+	require.NotEqual(pg.T(), nil, withdrawRes)
+
+	TxId := withdrawRes["TxID"]
+	TxWithdrawStatus, err := getPortalCustodianWithdrawV3(pg.IncRPCHost, TxId.(string), "getcustodianwithdrawrequeststatusv3")
+	require.Equal(pg.T(), nil, err)
+	require.Equal(pg.T(), float64(1), TxWithdrawStatus["Status"].(float64))
+
+	// submit to portal contract
+	withdrawProof, err := getAndDecodeProofV3(pg.IncRPCHost, TxId.(string), "getportalwithdrawcollateralproof")
+
+	balanceBefore, err := pg.ETHClient.BalanceAt(context.Background(), common.HexToAddress(pg.ETHOwnerAddrStr), nil)
+	require.Equal(pg.T(), nil, err)
+	_, err = Withdraw(pg.portalV3Inst, pg.auth, withdrawProof)
+	require.Equal(pg.T(), nil, err)
+	balanceAfter, err := pg.ETHClient.BalanceAt(context.Background(), common.HexToAddress(pg.ETHOwnerAddrStr), nil)
+	require.Equal(pg.T(), nil, err)
+	require.Equal(pg.T(), 0, big.NewInt(0).Sub(balanceAfter, balanceBefore).Cmp(big.NewInt(int64(pg.DepositingEther*params.Ether/2))))
+
+	// resubmit proof
+	_, err = Withdraw(pg.portalV3Inst, pg.auth, withdrawProof)
+	require.NotEqual(pg.T(), nil, err)
+
+	// burn amount greater than available must be fail
+	withdrawRes, err = pg.callCustodianWithdraw(
+		pg.IncPrivKeyStr,
+		pg.IncPaymentAddrStr,
+		pg.ETHOwnerAddrStr,
+		pg.EtherAddressStr,
+		big.NewInt(int64(pg.DepositingEther*params.Ether)).String(),
+	)
+	require.Equal(pg.T(), nil, err)
+	time.Sleep(30 * time.Second)
+	require.NotEqual(pg.T(), nil, withdrawRes)
+
+	TxId = withdrawRes["TxID"]
+	TxWithdrawStatus, err = getPortalCustodianWithdrawV3(pg.IncRPCHost, TxId.(string), "getcustodianwithdrawrequeststatusv3")
+	require.Equal(pg.T(), nil, err)
+	require.Equal(pg.T(), float64(2), TxWithdrawStatus["Status"].(float64))
 }
 
 func ethInstance(ethPrivate string, ethEnpoint string) (*ecdsa.PrivateKey, *ethclient.Client, error) {

@@ -5,12 +5,16 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"math/big"
 	"math/rand"
+	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum"
@@ -236,7 +240,7 @@ func (portalV3Suite *PortalV3BaseTestSuite) callCustodianDeposit(
 		"ProofStrs":       ethDepositProof,
 		"TxIndex":         ethTxIdx,
 	}
-	params := []interface{}{
+	paramsRPC := []interface{}{
 		portalV3Suite.IncPrivKeyStr,
 		nil,
 		5,
@@ -249,7 +253,7 @@ func (portalV3Suite *PortalV3BaseTestSuite) callCustodianDeposit(
 		portalV3Suite.IncRPCHost,
 		"",
 		"createandsendtxwithcustodiandepositv3",
-		params,
+		paramsRPC,
 		&res,
 	)
 	if err != nil {
@@ -257,7 +261,50 @@ func (portalV3Suite *PortalV3BaseTestSuite) callCustodianDeposit(
 	}
 
 	response, _ := json.Marshal(res)
-	fmt.Println("get response", string(response))
+	fmt.Println("Custodian deposit get response", string(response))
+
+	if res.RPCError != nil {
+		return nil, errors.New(res.RPCError.Message)
+	}
+	return res.Result.(map[string]interface{}), nil
+}
+
+func (portalV3Suite *PortalV3BaseTestSuite) callCustodianWithdraw(
+	CustodianPrivateKey string,
+	CustodianIncAddress string,
+	CustodianExtAddress string,
+	ExternalTokenID string,
+	AmountStr string,
+) (map[string]interface{}, error) {
+	rpcClient := rpccaller.NewRPCClient()
+	meta := map[string]interface{}{
+		"CustodianIncAddress": CustodianIncAddress,
+		"CustodianExtAddress": CustodianExtAddress,
+		"ExternalTokenID":     ExternalTokenID,
+		"Amount":              AmountStr,
+	}
+	paramsRPC := []interface{}{
+		CustodianPrivateKey,
+		nil,
+		5,
+		-1,
+		meta,
+	}
+	var res IssuingETHRes
+	err := rpcClient.RPCCall(
+		"",
+		portalV3Suite.IncRPCHost,
+		"",
+		"createandsendtxwithcustodianwithdrawrequestv3",
+		paramsRPC,
+		&res,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	response, _ := json.Marshal(res)
+	fmt.Println("Custodian withdraw get response", string(response))
 
 	if res.RPCError != nil {
 		return nil, errors.New(res.RPCError.Message)
@@ -285,7 +332,7 @@ func (portalV3Suite *PortalV3BaseTestSuite) callUnlockCollateralToken(
 		"Privacy":       true,
 		"TokenFee":      0,
 	}
-	params := []interface{}{
+	paramsRPC := []interface{}{
 		portalV3Suite.IncPrivKeyStr,
 		nil,
 		5,
@@ -300,7 +347,7 @@ func (portalV3Suite *PortalV3BaseTestSuite) callUnlockCollateralToken(
 		portalV3Suite.IncRPCHost,
 		"",
 		burningMethod,
-		params,
+		paramsRPC,
 		&res,
 	)
 	if err != nil {
@@ -511,4 +558,147 @@ func getPortalCustodianDepositStatusv3(url string, txHash string) (map[string]in
 		return nil, err
 	}
 	return res.Result.(map[string]interface{}), nil
+}
+
+func getPortalCustodianWithdrawV3(url, txHash, rpcMethod string) (map[string]interface{}, error) {
+	rpcClient := rpccaller.NewRPCClient()
+	transactionId := map[string]interface{}{"TxId": txHash}
+	params := []interface{}{transactionId}
+	var res CommonRes
+	err := rpcClient.RPCCall(
+		"",
+		url,
+		"",
+		rpcMethod,
+		params,
+		&res,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return res.Result.(map[string]interface{}), nil
+}
+
+func getPortalCustodianWithdrawProofv3(url string, txHash, rpcMethod string) (string, error) {
+	if len(txHash) == 0 {
+		txHash = "87c89c1c19cec3061eff9cfefdcc531d9456ac48de568b3974c5b0a88d5f3834"
+	}
+	payload := strings.NewReader(fmt.Sprintf("{\n    \"id\": 1,\n    \"jsonrpc\": \"1.0\",\n    \"method\": \"%s\",\n    \"params\": [\n    \t\"%s\"\n    ]\n}", rpcMethod, txHash))
+
+	req, _ := http.NewRequest("POST", url, payload)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
+}
+
+func getAndDecodeProofV3(
+	incBridgeHost string,
+	txID string,
+	rpcMethod string,
+) (*decodedProof, error) {
+	body, err := getPortalCustodianWithdrawProofv3(incBridgeHost, txID, rpcMethod)
+	if err != nil {
+		return nil, err
+	}
+	if len(body) < 1 {
+		return nil, fmt.Errorf("portal withdraw proof to SC not found")
+	}
+
+	r := getProofResult{}
+	err = json.Unmarshal([]byte(body), &r)
+	if err != nil {
+		return nil, err
+	}
+	return decodeProof(&r)
+}
+
+func decodeProof(r *getProofResult) (*decodedProof, error) {
+	inst := decode(r.Result.Instruction)
+	fmt.Printf("inst: %d %x\n", len(inst), inst)
+	fmt.Printf("instHash (isWithdrawed, without height): %x\n", keccak256(inst))
+
+	// Block heights
+	beaconHeight := big.NewInt(0).SetBytes(decode(r.Result.BeaconHeight))
+
+	beaconInstRoot := decode32(r.Result.BeaconInstRoot)
+	beaconInstPath := make([][32]byte, len(r.Result.BeaconInstPath))
+	beaconInstPathIsLeft := make([]bool, len(r.Result.BeaconInstPath))
+	for i, path := range r.Result.BeaconInstPath {
+		beaconInstPath[i] = decode32(path)
+		beaconInstPathIsLeft[i] = r.Result.BeaconInstPathIsLeft[i]
+	}
+	// fmt.Printf("beaconInstRoot: %x\n", beaconInstRoot)
+
+	beaconBlkData := toByte32(decode(r.Result.BeaconBlkData))
+	fmt.Printf("data: %s %s\n", r.Result.BeaconBlkData, r.Result.BeaconInstRoot)
+	fmt.Printf("expected beaconBlkHash: %x\n", keccak256(beaconBlkData[:], beaconInstRoot[:]))
+
+	beaconSigVs, beaconSigRs, beaconSigSs, err := decodeSigs(r.Result.BeaconSigs)
+	if err != nil {
+		return nil, err
+	}
+
+	beaconSigIdxs := []*big.Int{}
+	for _, sIdx := range r.Result.BeaconSigIdxs {
+		beaconSigIdxs = append(beaconSigIdxs, big.NewInt(int64(sIdx)))
+	}
+
+	return &decodedProof{
+		Instruction:     inst,
+		Heights:         beaconHeight,
+		InstPaths:       beaconInstPath,
+		InstPathIsLefts: beaconInstPathIsLeft,
+		InstRoots:       beaconInstRoot,
+		BlkData:         beaconBlkData,
+		SigIdxs:         beaconSigIdxs,
+		SigVs:           beaconSigVs,
+		SigRs:           beaconSigRs,
+		SigSs:           beaconSigSs,
+	}, nil
+}
+
+func decodeSigs(sigs []string) (
+	sigVs []uint8,
+	sigRs [][32]byte,
+	sigSs [][32]byte,
+	err error,
+) {
+	sigVs = make([]uint8, len(sigs))
+	sigRs = make([][32]byte, len(sigs))
+	sigSs = make([][32]byte, len(sigs))
+	for i, sig := range sigs {
+		v, r, s, e := bridgesig.DecodeECDSASig(decode(sig))
+		if e != nil {
+			err = e
+			return
+		}
+		sigVs[i] = uint8(v)
+		copy(sigRs[i][:], r)
+		copy(sigSs[i][:], s)
+	}
+	return
+}
+
+func decode(s string) []byte {
+	d, _ := hex.DecodeString(s)
+	return d
+}
+
+func decode32(s string) [32]byte {
+	return toByte32(decode(s))
+}
+
+func keccak256(b ...[]byte) [32]byte {
+	h := crypto.Keccak256(b...)
+	r := [32]byte{}
+	copy(r[:], h)
+	return r
 }
