@@ -579,12 +579,11 @@ func getPortalCustodianWithdrawV3(url, txHash, rpcMethod string) (map[string]int
 	return res.Result.(map[string]interface{}), nil
 }
 
-func getPortalCustodianWithdrawProofv3(url string, txHash, rpcMethod string) (string, error) {
+func getPortalCustodianWithdrawProofv3(url, txHash, rpcMethod string) (string, error) {
 	if len(txHash) == 0 {
 		txHash = "87c89c1c19cec3061eff9cfefdcc531d9456ac48de568b3974c5b0a88d5f3834"
 	}
-	payload := strings.NewReader(fmt.Sprintf("{\n    \"id\": 1,\n    \"jsonrpc\": \"1.0\",\n    \"method\": \"%s\",\n    \"params\": [\n    \t\"%s\"\n    ]\n}", rpcMethod, txHash))
-
+	payload := strings.NewReader(fmt.Sprintf("{\n    \"id\": 1,\n    \"jsonrpc\": \"1.0\",\n    \"method\": \"%s\",\n    \"params\": [\n{\"TxID\":\t\"%s\"\n}]\n}", rpcMethod, txHash))
 	req, _ := http.NewRequest("POST", url, payload)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -626,8 +625,9 @@ func decodeProof(r *getProofResult) (*decodedProof, error) {
 	fmt.Printf("instHash (isWithdrawed, without height): %x\n", keccak256(inst))
 
 	// Block heights
+	fmt.Println(r.Result.BeaconHeight)
 	beaconHeight := big.NewInt(0).SetBytes(decode(r.Result.BeaconHeight))
-
+	fmt.Println(beaconHeight.String())
 	beaconInstRoot := decode32(r.Result.BeaconInstRoot)
 	beaconInstPath := make([][32]byte, len(r.Result.BeaconInstPath))
 	beaconInstPathIsLeft := make([]bool, len(r.Result.BeaconInstPath))

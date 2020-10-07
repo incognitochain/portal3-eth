@@ -53,7 +53,7 @@ contract Delegator is AdminPausable {
         delegator = _delegator;
         incognito = _incognito;
         // init metadata type accepted
-        metadata[170] = 227; // custodian withdraw free collateral
+        metadata[170] = 233; // custodian withdraw free collateral
     }
 
     /**

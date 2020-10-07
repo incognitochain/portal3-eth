@@ -204,10 +204,11 @@ contract PortalV3 is AdminPausable {
         bytes32 itx;
         assembly {
             // skip first 0x20 bytes (stored length of inst)
-            token := mload(add(inst, 0x22)) // [3:34]
-            to := mload(add(inst, 0x42)) // [34:66]
-            amount := mload(add(inst, 0x62)) // [66:98]
-            itx := mload(add(inst, 0x82)) // [98:130]
+            // skip the next 0x69 bytes (stored incognito address)
+            to := mload(add(inst, 0x89)) // [137:169]
+            token := mload(add(inst, 0xA9)) // [169:201]
+            amount := mload(add(inst, 0xC9)) // [201:233]
+            itx := mload(add(inst, 0xE9)) // [233:265]
         }
         data.token = token;
         data.to = to;

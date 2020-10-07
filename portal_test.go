@@ -50,7 +50,7 @@ func (v3 *PortalV3TestSuite) TearDownTest() {
 
 // In order for 'go test' to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run
-func TestPortalV3(t *testing.T) {
+func TestUnitPortalV3(t *testing.T) {
 	fmt.Println("Starting entry point for vault v3 test suite...")
 	suite.Run(t, new(PortalV3TestSuite))
 
@@ -276,8 +276,8 @@ func (v3 *PortalV3TestSuite) TestPortalV3UnLockCustodianTokens() {
 			_, _, err = lockSimERC20WithTxs(v3.p, tinfo.c, tinfo.addr, tc.deposit)
 			assert.Nil(t, err)
 			v3.p.sim.Commit()
-			meta := 119
-			shardID := 1
+			meta := 170
+			shardID := 0
 			proof, instHash := buildWithdrawTestcase(v3.c, meta, shardID, tinfo.addr, tc.withdraw, auth.From)
 			incognitoProxy, _ := incognitoproxy.NewIncognitoproxy(v3.p.incAddr, v3.p.sim)
 			isApproved, err := incognitoProxy.InstructionApproved(
@@ -312,11 +312,6 @@ func (v3 *PortalV3TestSuite) TestPortalV3UnLockCustodianTokens() {
 func (v3 *PortalV3TestSuite) TestPortalV3UnLockCustodianTokensWhilePaused() {
 	fmt.Println("==== PORTAL 3 TEST CUSTODIAN UNLOCK TOKEN FROM PORTAL WHILE PORTAL PAUSED ====")
 	b2e27, _ := big.NewInt(1).SetString("2000000000000000000000000000", 10)
-	_, err := v3.p.portalV3Ins.Pause(auth)
-	require.Equal(v3.T(), nil, err)
-	v3.p.sim.Commit()
-	isPaused, _ := v3.p.portalV3Ins.Paused(nil)
-	require.Equal(v3.T(), true, isPaused)
 
 	testCases := []struct {
 		desc     string
@@ -380,12 +375,24 @@ func (v3 *PortalV3TestSuite) TestPortalV3UnLockCustodianTokensWhilePaused() {
 			// Deposit, must success
 			_, _, err = lockSimERC20WithTxs(v3.p, tinfo.c, tinfo.addr, tc.deposit)
 			assert.Nil(t, err)
+		})
+	}
 
-			meta := 119
-			shardID := 1
+	_, err := v3.p.portalV3Ins.Pause(auth)
+	require.Equal(v3.T(), nil, err)
+	v3.p.sim.Commit()
+	isPaused, _ := v3.p.portalV3Ins.Paused(nil)
+	require.Equal(v3.T(), true, isPaused)
+
+	for _, tc := range testCases {
+		v3.T().Run(tc.desc, func(t *testing.T) {
+			tinfo := v3.p.tokens[tc.decimal]
+			meta := 170
+			shardID := 0
 			proof, _ := buildWithdrawTestcase(v3.c, meta, shardID, tinfo.addr, tc.withdraw, auth.From)
 
 			_, err = Withdraw(v3.p.portalV3Ins, auth, proof)
+			// Withdraw, must fail
 			require.NotEqual(v3.T(), nil, err)
 		})
 	}

@@ -628,13 +628,15 @@ func buildWithdrawData(meta, shard int, tokenID common.Address, amount *big.Int,
 func buildDecodedWithdrawInst(meta, shard int, tokenID, withdrawer common.Address, amount *big.Int) []byte {
 	decoded := []byte{byte(meta)}
 	decoded = append(decoded, byte(shard))
-	decoded = append(decoded, toBytes32BigEndian(tokenID[:])...)
+	// custodian address
+	decoded = append(decoded, make([]byte, 103)...)
 	decoded = append(decoded, toBytes32BigEndian(withdrawer[:])...)
+	decoded = append(decoded, toBytes32BigEndian(tokenID[:])...)
 	decoded = append(decoded, toBytes32BigEndian(amount.Bytes())...)
 	txId := make([]byte, 32)
 	rand.Read(txId)
 	decoded = append(decoded, toBytes32BigEndian(txId)...) // txID
-	decoded = append(decoded, make([]byte, 16)...)         // incTokenID, variable length
+	//decoded = append(decoded, make([]byte, 16)...)         // incTokenID, variable length
 	return decoded
 }
 
