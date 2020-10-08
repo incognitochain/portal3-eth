@@ -46,6 +46,7 @@ type PortalIntegrationTestSuite struct {
 	SALTBalanceAfterStep2 *big.Int
 	auth                  *bind.TransactOpts
 	portalV3Inst          *portalv3.Portalv3
+	incProxy              *incognitoproxy.Incognitoproxy
 }
 
 func NewPortalIntegrationTestSuite(tradingTestSuite *PortalV3BaseTestSuite) *PortalIntegrationTestSuite {
@@ -67,7 +68,6 @@ func (pg *PortalIntegrationTestSuite) genBlock() {
 func (pg *PortalIntegrationTestSuite) SetupSuite() {
 	fmt.Println("Setting up the suite...")
 	// Kovan env
-
 	pg.IncKBNTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000082"
 	pg.IncSALTTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000081"
 	pg.IncOMGTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000072"
@@ -85,7 +85,7 @@ func (pg *PortalIntegrationTestSuite) SetupSuite() {
 	// remove container if already running
 	exec.Command("/bin/sh", "-c", "docker rm -f portalv3").Output()
 	exec.Command("/bin/sh", "-c", "docker rm -f incognito").Output()
-	_, err = exec.Command("/bin/sh", "-c", "docker run -d -p 8545:8545 --name portalv3 bomtb/kybertrade").Output()
+	_, err = exec.Command("/bin/sh", "-c", "docker run -d -p 8545:8545 --name portalv3 trufflesuite/ganache-cli --account=\"0x1ABA488300A9D7297A315D127837BE4219107C62C61966ECDF7A75431D75CC61,10000000000000000000000000000000000\"").Output()
 	require.Equal(pg.T(), nil, err)
 	time.Sleep(10 * time.Second)
 
@@ -94,8 +94,15 @@ func (pg *PortalIntegrationTestSuite) SetupSuite() {
 	pg.ETHClient = ETHClient
 	pg.ETHPrivKey = ETHPrivKey
 	pg.auth = bind.NewKeyedTransactor(ETHPrivKey)
-	c := getFixedCommittee()
 
+	//pg.Portalv3 = common.HexToAddress("0x8c13AFB7815f10A8333955854E6ec7503eD841B7")
+	//pg.portalV3Inst, err = portalv3.NewPortalv3(pg.Portalv3, pg.ETHClient)
+	//require.Equal(pg.T(), nil, err)
+	//incAddr := common.HexToAddress("0x2fe0423B148739CD9D0E49e07b5ca00d388A15ac")
+	//pg.incProxy, err = incognitoproxy.NewIncognitoproxy(incAddr, pg.ETHClient)
+	//require.Equal(pg.T(), nil, err)
+
+	c := getFixedCommittee()
 	incAddr, _, _, err := incognitoproxy.DeployIncognitoproxy(pg.auth, pg.ETHClient, pg.auth.From, c.beacons)
 	require.Equal(pg.T(), nil, err)
 	fmt.Printf("Proxy address: %s\n", incAddr.Hex())
@@ -108,7 +115,8 @@ func (pg *PortalIntegrationTestSuite) SetupSuite() {
 	fmt.Printf("delegator address: %s\n", pg.Portalv3.Hex())
 	pg.portalV3Inst, err = portalv3.NewPortalv3(pg.Portalv3, pg.ETHClient)
 	require.Equal(pg.T(), nil, err)
-	//pg.Portalv3 = common.HexToAddress("0x1B4c8873Fd83aB7E2eaB66cDB238F884827a61d4")
+	pg.incProxy, err = incognitoproxy.NewIncognitoproxy(incAddr, pg.ETHClient)
+	require.Equal(pg.T(), nil, err)
 
 	//get portalv3 ip
 	ipAddress, err := exec.Command("/bin/sh", "-c", "docker inspect -f \"{{ .NetworkSettings.IPAddress }}\" portalv3").Output()
@@ -188,13 +196,13 @@ func (pg *PortalIntegrationTestSuite) Test1CustodianDeposit() {
 		ethTxIdx,
 	)
 	require.Equal(pg.T(), nil, err)
-	time.Sleep(30 * time.Second)
+	time.Sleep(40 * time.Second)
 	require.NotEqual(pg.T(), nil, depositRes)
 	TxId := depositRes["TxID"]
 	TxDepositStatus, err := getPortalCustodianDepositStatusv3(pg.IncRPCHost, TxId.(string))
 	require.Equal(pg.T(), float64(1), TxDepositStatus["Status"].(float64))
 	require.Equal(pg.T(), pg.DepositingEther*1e9, TxDepositStatus["DepositAmount"].(float64))
-	require.Equal(pg.T(), pg.EtherAddressStr, TxDepositStatus["ExternalTokenID"].(string))
+	require.Equal(pg.T(), pg.EtherAddressStr[2:], TxDepositStatus["ExternalTokenID"].(string))
 
 	// Submit the same as above proof must failed
 	depositRes, err = pg.callCustodianDeposit(
@@ -227,7 +235,7 @@ func (pg *PortalIntegrationTestSuite) Test2CustodianWithdraw() {
 		big.NewInt(int64(pg.DepositingEther*params.Ether/2e9)).String(),
 	)
 	require.Equal(pg.T(), nil, err)
-	time.Sleep(30 * time.Second)
+	time.Sleep(60 * time.Second)
 	require.NotEqual(pg.T(), nil, withdrawRes)
 
 	TxId := withdrawRes["TxID"]
@@ -237,7 +245,7 @@ func (pg *PortalIntegrationTestSuite) Test2CustodianWithdraw() {
 
 	// submit to portal contract
 	withdrawProof, err := getAndDecodeProofV3(pg.IncRPCHost, TxId.(string), "getportalwithdrawcollateralproof")
-
+	require.Equal(pg.T(), nil, err)
 	balanceBefore, err := pg.ETHClient.BalanceAt(context.Background(), common.HexToAddress(pg.ETHOwnerAddrStr), nil)
 	require.Equal(pg.T(), nil, err)
 	_, err = Withdraw(pg.portalV3Inst, pg.auth, withdrawProof)

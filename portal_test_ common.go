@@ -165,17 +165,32 @@ func setupFixedCommittee(accs ...common.Address) (*Platform, *committees, error)
 
 // getFixedCommittee is for unittest
 func getFixedCommittee() *committees {
+	// unccomment when run on testnet env
+	//beaconCommPrivs := []string{
+	//	"aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f",
+	//	"ca71365ceddfa8e0813cf184463bd48f0b62c9d7d5825cf95263847628816e82",
+	//	"1e4d2244506211200640567630e3951abadbc2154cf772e4f0d2ff0770290c7c",
+	//	"c7146b500240ed7aac9445e2532ae8bf6fc7108f6ea89fde5eebdf2fb6cefa5a",
+	//}
+	//beaconComm := []string{
+	//	"0x3cD69B1A595B7A9589391538d29ee7663326e4d3",
+	//	"0xc687470342f4E80ECEf6bBd25e276266d40b8429",
+	//	"0x2A40c96b41AdEc5641F28eF923e270B73e29bb53",
+	//	"0x131B772A9ADe1793F000024eAb23b77bEd3BFe64",
+	//}
+
+	// local env
 	beaconCommPrivs := []string{
-		"aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f",
-		"ca71365ceddfa8e0813cf184463bd48f0b62c9d7d5825cf95263847628816e82",
-		"1e4d2244506211200640567630e3951abadbc2154cf772e4f0d2ff0770290c7c",
-		"c7146b500240ed7aac9445e2532ae8bf6fc7108f6ea89fde5eebdf2fb6cefa5a",
+		"f129b70a46ac35c4179410f352d7f55cc547e1a9261fe8ede772340471ebc609",
+		"caa8aadf1edbc572808f08651d4185ded1215ad407e63cb46f11c505c6167efe",
+		"643b2db2895c53115ab1530dfdb332ee1be07dccd43ad9f5629b4c5088a8ad1a",
+		"000a4351df7b2b86c34058e642a6c25db66c30888db58ee144cec0450cf5a0eb",
 	}
 	beaconComm := []string{
-		"0xD7d93b7fa42b60b6076f3017fCA99b69257A912D",
-		"0xf25ee30cfed2d2768C51A6Eb6787890C1c364cA4",
-		"0x0D8c517557f3edE116988DD7EC0bAF83b96fe0Cb",
-		"0xc225fcd5CE8Ad42863182Ab71acb6abD9C4ddCbE",
+		"0x3cD69B1A595B7A9589391538d29ee7663326e4d3",
+		"0xc687470342f4E80ECEf6bBd25e276266d40b8429",
+		"0x2A40c96b41AdEc5641F28eF923e270B73e29bb53",
+		"0x131B772A9ADe1793F000024eAb23b77bEd3BFe64",
 	}
 	beaconPrivs := make([][]byte, len(beaconCommPrivs))
 	for i, p := range beaconCommPrivs {
