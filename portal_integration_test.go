@@ -196,13 +196,19 @@ func (pg *PortalIntegrationTestSuite) Test1CustodianDeposit() {
 		ethTxIdx,
 	)
 	require.Equal(pg.T(), nil, err)
-	time.Sleep(40 * time.Second)
 	require.NotEqual(pg.T(), nil, depositRes)
 	TxId := depositRes["TxID"]
-	TxDepositStatus, err := getPortalCustodianDepositStatusv3(pg.IncRPCHost, TxId.(string))
-	require.Equal(pg.T(), float64(1), TxDepositStatus["Status"].(float64))
-	require.Equal(pg.T(), pg.DepositingEther*1e9, TxDepositStatus["DepositAmount"].(float64))
-	require.Equal(pg.T(), pg.EtherAddressStr[2:], TxDepositStatus["ExternalTokenID"].(string))
+
+	for {
+		time.Sleep(5 * time.Second)
+		TxDepositStatus, err := getPortalCustodianDepositStatusv3(pg.IncRPCHost, TxId.(string))
+		if TxDepositStatus != nil || err != nil {
+			require.Equal(pg.T(), float64(1), TxDepositStatus["Status"].(float64))
+			require.Equal(pg.T(), pg.DepositingEther*1e9, TxDepositStatus["DepositAmount"].(float64))
+			require.Equal(pg.T(), pg.EtherAddressStr[2:], TxDepositStatus["ExternalTokenID"].(string))
+			break
+		}
+	}
 
 	// Submit the same as above proof must failed
 	depositRes, err = pg.callCustodianDeposit(
@@ -212,12 +218,16 @@ func (pg *PortalIntegrationTestSuite) Test1CustodianDeposit() {
 		ethTxIdx,
 	)
 	require.Equal(pg.T(), nil, err)
-	time.Sleep(30 * time.Second)
 	require.NotEqual(pg.T(), nil, depositRes)
 	TxId = depositRes["TxID"]
-	TxDepositStatus, err = getPortalCustodianDepositStatusv3(pg.IncRPCHost, TxId.(string))
-	require.Equal(pg.T(), float64(2), TxDepositStatus["Status"].(float64))
-
+	for {
+		time.Sleep(5 * time.Second)
+		TxDepositStatus, err := getPortalCustodianDepositStatusv3(pg.IncRPCHost, TxId.(string))
+		if TxDepositStatus != nil || err != nil {
+			require.Equal(pg.T(), float64(2), TxDepositStatus["Status"].(float64))
+			break
+		}
+	}
 }
 
 func (pg *PortalIntegrationTestSuite) Test2CustodianWithdraw() {
@@ -235,13 +245,19 @@ func (pg *PortalIntegrationTestSuite) Test2CustodianWithdraw() {
 		big.NewInt(int64(pg.DepositingEther*params.Ether/2e9)).String(),
 	)
 	require.Equal(pg.T(), nil, err)
-	time.Sleep(60 * time.Second)
 	require.NotEqual(pg.T(), nil, withdrawRes)
 
 	TxId := withdrawRes["TxID"]
-	TxWithdrawStatus, err := getPortalCustodianWithdrawV3(pg.IncRPCHost, TxId.(string), "getcustodianwithdrawrequeststatusv3")
-	require.Equal(pg.T(), nil, err)
-	require.Equal(pg.T(), float64(1), TxWithdrawStatus["Status"].(float64))
+	for {
+		time.Sleep(5 * time.Second)
+		TxWithdrawStatus, err := getPortalCustodianWithdrawV3(pg.IncRPCHost, TxId.(string), "getcustodianwithdrawrequeststatusv3")
+		if TxWithdrawStatus != nil || err != nil {
+			require.Equal(pg.T(), nil, err)
+			require.Equal(pg.T(), float64(1), TxWithdrawStatus["Status"].(float64))
+			break
+		}
+	}
+	time.Sleep(10 * time.Second)
 
 	// submit to portal contract
 	withdrawProof, err := getAndDecodeProofV3(pg.IncRPCHost, TxId.(string), "getportalwithdrawcollateralproof")
@@ -267,13 +283,18 @@ func (pg *PortalIntegrationTestSuite) Test2CustodianWithdraw() {
 		big.NewInt(int64(pg.DepositingEther*params.Ether)).String(),
 	)
 	require.Equal(pg.T(), nil, err)
-	time.Sleep(30 * time.Second)
 	require.NotEqual(pg.T(), nil, withdrawRes)
 
 	TxId = withdrawRes["TxID"]
-	TxWithdrawStatus, err = getPortalCustodianWithdrawV3(pg.IncRPCHost, TxId.(string), "getcustodianwithdrawrequeststatusv3")
-	require.Equal(pg.T(), nil, err)
-	require.Equal(pg.T(), float64(2), TxWithdrawStatus["Status"].(float64))
+	for {
+		time.Sleep(5 * time.Second)
+		TxWithdrawStatus, err := getPortalCustodianWithdrawV3(pg.IncRPCHost, TxId.(string), "getcustodianwithdrawrequeststatusv3")
+		if TxWithdrawStatus != nil || err != nil {
+			require.Equal(pg.T(), nil, err)
+			require.Equal(pg.T(), float64(2), TxWithdrawStatus["Status"].(float64))
+			break
+		}
+	}
 }
 
 func ethInstance(ethPrivate string, ethEnpoint string) (*ecdsa.PrivateKey, *ethclient.Client, error) {

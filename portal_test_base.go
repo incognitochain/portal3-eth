@@ -554,7 +554,7 @@ func getPortalCustodianDepositStatusv3(url string, txHash string) (map[string]in
 		params,
 		&res,
 	)
-	if err != nil {
+	if err != nil || res.Result == nil {
 		return nil, err
 	}
 	return res.Result.(map[string]interface{}), nil
@@ -573,7 +573,7 @@ func getPortalCustodianWithdrawV3(url, txHash, rpcMethod string) (map[string]int
 		params,
 		&res,
 	)
-	if err != nil {
+	if err != nil || res.Result == nil {
 		return nil, err
 	}
 	return res.Result.(map[string]interface{}), nil
