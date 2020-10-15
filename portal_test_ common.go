@@ -604,8 +604,8 @@ func (p *Platform) getBalance(addr common.Address) *big.Int {
 	return bal
 }
 
-func buildWithdrawTestcase(c *committees, meta, shard int, tokenID common.Address, amount *big.Int, withdrawer common.Address) (*decodedProof, [32]byte) {
-	inst, mp, blkData, blkHash := buildWithdrawData(meta, shard, tokenID, amount, withdrawer)
+func buildWithdrawTestcase(c *committees, meta, shard int, tokenIDs []common.Address, amounts []*big.Int, withdrawer common.Address) (*decodedProof, [32]byte) {
+	inst, mp, blkData, blkHash := buildWithdrawData(meta, shard, tokenIDs, amounts, withdrawer)
 	ipBeacon := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
 	return &decodedProof{
 		Instruction: inst,
@@ -622,12 +622,12 @@ func buildWithdrawTestcase(c *committees, meta, shard int, tokenID common.Addres
 	}, ipBeacon.instHash
 }
 
-func buildWithdrawData(meta, shard int, tokenID common.Address, amount *big.Int, withdrawer common.Address) ([]byte, *merklePath, []byte, []byte) {
+func buildWithdrawData(meta, shard int, tokenIDs []common.Address, amounts []*big.Int, withdrawer common.Address) ([]byte, *merklePath, []byte, []byte) {
 	// Build instruction merkle tree
 	numInst := 10
 	startNodeID := 7
 	height := big.NewInt(1)
-	inst := buildDecodedWithdrawInst(meta, shard, tokenID, withdrawer, amount)
+	inst := buildDecodedWithdrawInst(meta, shard, tokenIDs, withdrawer, amounts)
 	instWithHeight := append(inst, toBytes32BigEndian(height.Bytes())...)
 	data := randomMerkleHashes(numInst)
 	data[startNodeID] = instWithHeight
@@ -640,14 +640,17 @@ func buildWithdrawData(meta, shard int, tokenID common.Address, amount *big.Int,
 	return inst, mp, blkData, blkHash[:]
 }
 
-func buildDecodedWithdrawInst(meta, shard int, tokenID, withdrawer common.Address, amount *big.Int) []byte {
+func buildDecodedWithdrawInst(meta, shard int, tokenIDs []common.Address, withdrawer common.Address, amounts []*big.Int) []byte {
 	decoded := []byte{byte(meta)}
 	decoded = append(decoded, byte(shard))
+	decoded = append(decoded, byte(len(tokenIDs)))
 	// custodian address
 	decoded = append(decoded, make([]byte, 103)...)
 	decoded = append(decoded, toBytes32BigEndian(withdrawer[:])...)
-	decoded = append(decoded, toBytes32BigEndian(tokenID[:])...)
-	decoded = append(decoded, toBytes32BigEndian(amount.Bytes())...)
+	for i, _ := range tokenIDs {
+		decoded = append(decoded, toBytes32BigEndian(tokenIDs[i][:])...)
+		decoded = append(decoded, toBytes32BigEndian(amounts[i].Bytes())...)
+	}
 	txId := make([]byte, 32)
 	rand.Read(txId)
 	decoded = append(decoded, toBytes32BigEndian(txId)...) // txID

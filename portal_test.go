@@ -278,7 +278,7 @@ func (v3 *PortalV3TestSuite) TestPortalV3UnLockCustodianTokens() {
 			v3.p.sim.Commit()
 			meta := 170
 			shardID := 0
-			proof, instHash := buildWithdrawTestcase(v3.c, meta, shardID, tinfo.addr, tc.withdraw, auth.From)
+			proof, instHash := buildWithdrawTestcase(v3.c, meta, shardID, []ec.Address{tinfo.addr}, []*big.Int{tc.withdraw}, auth.From)
 			incognitoProxy, _ := incognitoproxy.NewIncognitoproxy(v3.p.incAddr, v3.p.sim)
 			isApproved, err := incognitoProxy.InstructionApproved(
 				nil,
@@ -389,7 +389,7 @@ func (v3 *PortalV3TestSuite) TestPortalV3UnLockCustodianTokensWhilePaused() {
 			tinfo := v3.p.tokens[tc.decimal]
 			meta := 170
 			shardID := 0
-			proof, _ := buildWithdrawTestcase(v3.c, meta, shardID, tinfo.addr, tc.withdraw, auth.From)
+			proof, _ := buildWithdrawTestcase(v3.c, meta, shardID, []ec.Address{tinfo.addr}, []*big.Int{tc.withdraw}, auth.From)
 
 			_, err = Withdraw(v3.p.portalV3Ins, auth, proof)
 			// Withdraw, must fail

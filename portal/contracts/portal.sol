@@ -59,24 +59,24 @@ contract PortalV3 is AdminPausable {
     address public delegator;
     Incognito public incognito;
     bool notEntered = true;
-    mapping(uint8 => uint32) public metadata;
+    mapping(uint8 => bool) public metadata;
 
     using SafeMath for uint;
     mapping(bytes32 => bool) public withdrawed;
     struct BurnInstData {
         uint8 meta; // type of the instruction
         uint8 shard; // ID of the Incognito shard containing the instruction, must be 1
-        address token; // ETH address of the token contract (0x0 for ETH)
+        address[] tokens; // ETH address of the tokens contract (0x0 for ETH)
         address payable to; // ETH address of the receiver of the token
-        uint amount; // burned amount (on Incognito)
+        uint[] amounts; // burned amounts (on Incognito)
         bytes32 itx; // Incognito's burning tx
     }
 
     event Deposit(address tokenID, string custodianIncAddress, uint amount);
-    event Withdraw(address token, address to, uint amount);
+    event Withdraw(address[] token, address to, uint[] amount);
     event Delegator(address);
     event IncognitoProxy(address);
-    event MetaData(uint8, uint32);
+    event MetaData(uint8, bool);
 
     function deposit(string calldata custodianIncAddress) isNotPaused  payable external {
         require(address(this).balance <= 10 ** 27, "max value reached");
@@ -152,18 +152,10 @@ contract PortalV3 is AdminPausable {
         bytes32[] memory sigSs
     ) isNotPaused public {
         BurnInstData memory data = parseBurnInst(inst);
-        require(inst.length > 0 && metadata[data.meta] > 0 && uint256(inst.length) == uint256(metadata[data.meta])); // Check instruction type
+        require(metadata[data.meta], "metadata type is not allowed on portalv3"); // Check instruction type
         // Not withdrawed
         require(!withdrawed[data.itx], "withdraw transaction already used");
         withdrawed[data.itx] = true;
-
-        // Update decimal if not ETH coin
-        if (data.token != ETH_TOKEN) {
-            uint8 decimals = getDecimals(data.token);
-            if (decimals > 9) {
-                data.amount = data.amount * (10 ** (uint(decimals) - 9));
-            }
-        }
 
         verifyInst(
             inst,
@@ -179,15 +171,20 @@ contract PortalV3 is AdminPausable {
         );
 
         // Send and notify
-        if (data.token == ETH_TOKEN) {
-            (bool success, ) =  data.to.call{value: data.amount}("");
-            require(success, "internal transaction error");
-        } else {
-            IERC20(data.token).transfer(data.to, data.amount);
-            require(checkSuccess(), "internal transaction error");
+        for (uint8 i = 0; i < data.tokens.length; i++) {
+            if (data.tokens[i] != ETH_TOKEN) {
+                uint8 decimals = getDecimals(data.tokens[i]);
+                if (decimals > 9) {
+                    data.amounts[i] = data.amounts[i] * (10 ** (uint(decimals) - 9));
+                }
+                IERC20(data.tokens[i]).transfer(data.to, data.amounts[i]);
+                require(checkSuccess(), "internal transaction error");
+            } else {
+                (bool success, ) =  data.to.call{value: data.amounts[i]}("");
+                require(success, "internal transaction error");
+            }
         }
-
-        emit Withdraw(data.token, data.to, data.amount);
+        emit Withdraw(data.tokens, data.to, data.amounts);
     }
 
     /**
@@ -198,21 +195,30 @@ contract PortalV3 is AdminPausable {
         BurnInstData memory data;
         data.meta = uint8(inst[0]);
         data.shard = uint8(inst[1]);
-        address token;
+        uint8 numOfToken = uint8(inst[2]);
+        require(inst.length == 170 + 64 * numOfToken, "Invalid insturction");
+        address[] memory tokens = new address[](numOfToken);
         address payable to;
-        uint amount;
+        uint[] memory amounts = new uint[](numOfToken);
         bytes32 itx;
         assembly {
-            // skip first 0x20 bytes (stored length of inst)
-            // skip the next 0x69 bytes (stored incognito address)
-            to := mload(add(inst, 0x89)) // [137:169]
-            token := mload(add(inst, 0xA9)) // [169:201]
-            amount := mload(add(inst, 0xC9)) // [201:233]
-            itx := mload(add(inst, 0xE9)) // [233:265]
+        //skip first 0x20 bytes (stored length of inst)
+        // skip the next 0x6A bytes (stored incognito address)
+            to := mload(add(inst, 0x8A)) // [138:170]
+            itx := mload(add(inst, add(0xAA, mul(0x40, numOfToken)))) // [170+64*x:]
         }
-        data.token = token;
+
+        // load tokens and amounts into array
+        for (uint8 i = 1; i <= numOfToken; i++) {
+            assembly {
+                mstore(add(tokens, mul(0x20,i)), mload(add(inst, add(0x6A, mul(i, 0x40)))))
+                mstore(add(amounts, mul(0x20,i)), mload(add(inst, add(0x8A, mul(i, 0x40)))))
+            }
+        }
+
+        data.tokens = tokens;
         data.to = to;
-        data.amount = amount;
+        data.amounts = amounts;
         data.itx = itx;
         return data;
     }
@@ -242,7 +248,7 @@ contract PortalV3 is AdminPausable {
      * @param _meta: meta data type
      * @param _value: meta data value
      */
-    function updateMetaData(uint8 _meta, uint32 _value) external onlyAdmin {
+    function updateMetaData(uint8 _meta, bool _value) external onlyAdmin {
         metadata[_meta] = _value;
 
         MetaData(_meta, _value);
