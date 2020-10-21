@@ -483,14 +483,14 @@ func getETHTransactionByHash(
 	tx common.Hash,
 ) (map[string]interface{}, error) {
 	rpcClient := rpccaller.NewRPCClient()
-	params := []interface{}{tx.String()}
+	inputParams := []interface{}{tx.String()}
 	var res NormalResult
 	err := rpcClient.RPCCall(
 		"",
 		url,
 		"",
 		"eth_getTransactionByHash",
-		params,
+		inputParams,
 		&res,
 	)
 	if err != nil {
@@ -507,14 +507,14 @@ func getETHBlockByHash(
 	blockHash string,
 ) (map[string]interface{}, error) {
 	rpcClient := rpccaller.NewRPCClient()
-	params := []interface{}{blockHash, false}
+	inputParams := []interface{}{blockHash, false}
 	var res NormalResult
 	err := rpcClient.RPCCall(
 		"",
 		url,
 		"",
 		"eth_getBlockByHash",
-		params,
+		inputParams,
 		&res,
 	)
 	if err != nil {
@@ -525,14 +525,14 @@ func getETHBlockByHash(
 
 func getETHTransactionReceipt(url string, txHash common.Hash) (*types.Receipt, error) {
 	rpcClient := rpccaller.NewRPCClient()
-	params := []interface{}{txHash.String()}
+	inputParams := []interface{}{txHash.String()}
 	var res Receipt
 	err := rpcClient.RPCCall(
 		"",
 		url,
 		"",
 		"eth_getTransactionReceipt",
-		params,
+		inputParams,
 		&res,
 	)
 	if err != nil {
@@ -544,14 +544,14 @@ func getETHTransactionReceipt(url string, txHash common.Hash) (*types.Receipt, e
 func getPortalCustodianDepositStatusv3(url string, txHash string) (map[string]interface{}, error) {
 	rpcClient := rpccaller.NewRPCClient()
 	transactionId := map[string]interface{}{"DepositTxID": txHash}
-	params := []interface{}{transactionId}
+	inputParams := []interface{}{transactionId}
 	var res CommonRes
 	err := rpcClient.RPCCall(
 		"",
 		url,
 		"",
 		"getportalcustodiandepositstatusv3",
-		params,
+		inputParams,
 		&res,
 	)
 	if err != nil || res.Result == nil {
@@ -563,14 +563,14 @@ func getPortalCustodianDepositStatusv3(url string, txHash string) (map[string]in
 func getPortalCustodianWithdrawV3(url, txHash, rpcMethod string) (map[string]interface{}, error) {
 	rpcClient := rpccaller.NewRPCClient()
 	transactionId := map[string]interface{}{"TxId": txHash}
-	params := []interface{}{transactionId}
+	inputParams := []interface{}{transactionId}
 	var res CommonRes
 	err := rpcClient.RPCCall(
 		"",
 		url,
 		"",
 		rpcMethod,
-		params,
+		inputParams,
 		&res,
 	)
 	if err != nil || res.Result == nil {
@@ -583,7 +583,7 @@ func getPortalCustodianWithdrawProofv3(url, txHash, rpcMethod string) (string, e
 	if len(txHash) == 0 {
 		txHash = "87c89c1c19cec3061eff9cfefdcc531d9456ac48de568b3974c5b0a88d5f3834"
 	}
-	payload := strings.NewReader(fmt.Sprintf("{\n    \"id\": 1,\n    \"jsonrpc\": \"1.0\",\n    \"method\": \"%s\",\n    \"params\": [\n{\"TxID\":\t\"%s\"\n}]\n}", rpcMethod, txHash))
+	payload := strings.NewReader(fmt.Sprintf("{\n    \"id\": 1,\n    \"jsonrpc\": \"1.0\",\n    \"method\": \"%s\",\n \"params\": [\n{\"TxID\":\t\"%s\", \"MetadataType\": \t170}]\n}", rpcMethod, txHash))
 	req, _ := http.NewRequest("POST", url, payload)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
