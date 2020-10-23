@@ -129,19 +129,19 @@ func (pg *PortalIntegrationTestSuite) SetupSuite() {
 	require.Equal(pg.T(), nil, err)
 
 	for {
-		time.Sleep(15 * time.Second)
+		time.Sleep(5 * time.Second)
 		if checkRepsonse(pg.IncBridgeHost) {
 			break
 		}
 	}
-	time.Sleep(60 * time.Second)
+	time.Sleep(40 * time.Second)
 }
 
 func (pg *PortalIntegrationTestSuite) TearDownSuite() {
 	fmt.Println("Tearing down the suite...")
+	pg.ETHClient.Close()
 	_, err := exec.Command("/bin/sh", "-c", "docker rm -f portalv3").Output()
 	require.Equal(pg.T(), nil, err)
-	pg.ETHClient.Close()
 
 	_, err = exec.Command("/bin/sh", "-c", "docker rm -f incognito").Output()
 	require.Equal(pg.T(), nil, err)

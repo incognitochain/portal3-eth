@@ -1,8 +1,6 @@
 #!/bin/bash
 
 # run incognito chain
-cd /go/incognito-chain && go build -o incognito
-
 cd /go/incognito-chain && ./run_node.sh shard0-0 &
 cd /go/incognito-chain && ./run_node.sh shard0-1 &
 cd /go/incognito-chain && ./run_node.sh shard0-2 &

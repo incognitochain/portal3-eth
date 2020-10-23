@@ -9,8 +9,10 @@ RUN git clone --depth 1 --branch v3-multi https://github.com/incognitochain/inco
 COPY supervisord.conf supervisord.conf
 COPY run.sh run.sh
 COPY blockchain.txt ./incognito-chain/blockchain/blockchain.go
+COPY params.txt ./incognito-chain/blockchain/params.go
 RUN chmod a+x run.sh
 RUN mkdir /var/log/supervisord
+RUN cd /go/incognito-chain && go build -o incognito
 
 EXPOSE 9334 9338
 
