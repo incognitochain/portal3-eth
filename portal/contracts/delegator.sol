@@ -54,6 +54,8 @@ contract Delegator is AdminPausable {
         incognito = _incognito;
         // init metadata type accepted
         metadata[170] = true; // custodian withdraw free collateral
+        metadata[171] = true; // custodian liquidated
+        metadata[172] = true; // custodian run away with public token
     }
 
     /**
