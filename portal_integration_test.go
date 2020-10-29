@@ -260,7 +260,7 @@ func (pg *PortalIntegrationTestSuite) Test2CustodianWithdraw() {
 	time.Sleep(10 * time.Second)
 
 	// submit to portal contract
-	withdrawProof, err := getAndDecodeProofV3(pg.IncRPCHost, TxId.(string), "getportalwithdrawcollateralproof")
+	withdrawProof, err := getAndDecodeProofV3(pg.IncRPCHost, TxId.(string), "getportalwithdrawcollateralproof", 170)
 	require.Equal(pg.T(), nil, err)
 	balanceBefore, err := pg.ETHClient.BalanceAt(context.Background(), common.HexToAddress(pg.ETHOwnerAddrStr), nil)
 	require.Equal(pg.T(), nil, err)
@@ -296,6 +296,21 @@ func (pg *PortalIntegrationTestSuite) Test2CustodianWithdraw() {
 		}
 	}
 }
+
+//func (pg *PortalIntegrationTestSuite) Test3SubmitEthProof() {
+//	// submit to portal contract
+//	txID := "place tx to get proof here"
+//	withdrawProof, err := getAndDecodeProofV3(pg.IncRPCHost, txID, "getportalwithdrawcollateralproof", 171)
+//	require.Equal(pg.T(), nil, err)
+//	balanceBefore, err := pg.ETHClient.BalanceAt(context.Background(), common.HexToAddress(pg.ETHOwnerAddrStr), nil)
+//	require.Equal(pg.T(), nil, err)
+//	_, err = Withdraw(pg.portalV3Inst, pg.auth, withdrawProof)
+//	require.Equal(pg.T(), nil, err)
+//	balanceAfter, err := pg.ETHClient.BalanceAt(context.Background(), common.HexToAddress(pg.ETHOwnerAddrStr), nil)
+//	require.Equal(pg.T(), nil, err)
+//	fmt.Println(big.NewInt(0).Sub(balanceAfter, balanceBefore).String())
+//	require.Equal(pg.T(), 0, big.NewInt(0).Sub(balanceAfter, balanceBefore).Cmp(big.NewInt(74750000 * 1e9 )))
+//}
 
 func ethInstance(ethPrivate string, ethEnpoint string) (*ecdsa.PrivateKey, *ethclient.Client, error) {
 	privKey, err := crypto.HexToECDSA(ethPrivate)
