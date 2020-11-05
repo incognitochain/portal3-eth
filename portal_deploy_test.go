@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"math/big"
+	"strings"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -20,11 +22,11 @@ import (
 )
 
 var BRI_CONSENSUS = "dsa"
+
 type CommitteePublicKey struct {
 	IncPubKey    []byte
 	MiningPubKey map[string][]byte
 }
-
 
 func (pubKey *CommitteePublicKey) FromString(keyString string) error {
 	keyBytes, ver, err := base58.Base58Check{}.Decode(keyString)
@@ -33,7 +35,6 @@ func (pubKey *CommitteePublicKey) FromString(keyString string) error {
 	}
 	return json.Unmarshal(keyBytes, pubKey)
 }
-
 
 // // Define the suite, and absorb the built-in basic suite
 // // functionality from testify - including assertion methods.
@@ -111,17 +112,20 @@ func (portalv3DeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	err = wait(portalv3DeploySuite.ETHClient, tx.Hash())
 	require.Equal(portalv3DeploySuite.T(), nil, err)
 
-	portalv3, tx, _, err := portalv3.DeployPortalv3(auth, portalv3DeploySuite.ETHClient)
+	portalv3Addr, tx, _, err := portalv3.DeployPortalv3(auth, portalv3DeploySuite.ETHClient)
 	require.Equal(portalv3DeploySuite.T(), nil, err)
 
 	fmt.Println("deployed portalv3")
-	fmt.Printf("addr: %s\n", portalv3.Hex())
+	fmt.Printf("addr: %s\n", portalv3Addr.Hex())
 
 	// Wait until tx is confirmed
 	err = wait(portalv3DeploySuite.ETHClient, tx.Hash())
 	require.Equal(portalv3DeploySuite.T(), nil, err)
-	
-	delegator, tx, _, err := delegator.DeployDelegator(auth, portalv3DeploySuite.ETHClient, admin, portalv3, incAddr)
+
+	portalv3ABI, _ := abi.JSON(strings.NewReader(portalv3.Portalv3ABI))
+	input, _ := portalv3ABI.Pack("initialize", incAddr)
+
+	delegator, tx, _, err := delegator.DeployDelegator(auth, portalv3DeploySuite.ETHClient, portalv3Addr, admin, input)
 	require.Equal(portalv3DeploySuite.T(), nil, err)
 	// incAddr := common.HexToAddress(IncognitoProxyAddress)
 	fmt.Println("deployed delegator")

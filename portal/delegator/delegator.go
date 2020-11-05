@@ -27,19 +27,19 @@ var (
 )
 
 // DelegatorABI is the input ABI used to generate the binding from.
-const DelegatorABI = "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_admin\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_delegator\",\"type\":\"address\"},{\"internalType\":\"contractIncognito\",\"name\":\"_incognito\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"claimer\",\"type\":\"address\"}],\"name\":\"Claim\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"ndays\",\"type\":\"uint256\"}],\"name\":\"Extend\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"pauser\",\"type\":\"address\"}],\"name\":\"Paused\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"pauser\",\"type\":\"address\"}],\"name\":\"Unpaused\",\"type\":\"event\"},{\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"inputs\":[],\"name\":\"ETH_TOKEN\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"admin\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claim\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"delegator\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"expire\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"n\",\"type\":\"uint256\"}],\"name\":\"extend\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"incognito\",\"outputs\":[{\"internalType\":\"contractIncognito\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"metadata\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"pause\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"paused\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_successor\",\"type\":\"address\"}],\"name\":\"retire\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"successor\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"unpause\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]"
+const DelegatorABI = "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_logic\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_admin\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"_data\",\"type\":\"bytes\"}],\"stateMutability\":\"payable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"previousAdmin\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newAdmin\",\"type\":\"address\"}],\"name\":\"AdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"claimer\",\"type\":\"address\"}],\"name\":\"Claim\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"previousSuccessor\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newSuccessor\",\"type\":\"address\"}],\"name\":\"SuccessorChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"Upgraded\",\"type\":\"event\"},{\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"inputs\":[],\"name\":\"admin\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newAdmin\",\"type\":\"address\"}],\"name\":\"changeAdmin\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claim\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"implementation\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newSuccessor\",\"type\":\"address\"}],\"name\":\"retire\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"successor\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"}],\"name\":\"upgradeTo\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"upgradeToAndCall\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]"
 
 // DelegatorBin is the compiled bytecode used for deploying new contracts.
-var DelegatorBin = "0x60806040526001600460146101000a81548160ff02191690831515021790555034801561002b57600080fd5b506040516112d03803806112d08339818101604052606081101561004e57600080fd5b81019080805190602001909291908051906020019092919080519060200190929190505050600073ffffffffffffffffffffffffffffffffffffffff168373ffffffffffffffffffffffffffffffffffffffff16141580156100dd5750600073ffffffffffffffffffffffffffffffffffffffff168273ffffffffffffffffffffffffffffffffffffffff1614155b6100e657600080fd5b826000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506305a39a80420160028190555081600360006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555080600460006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555060016005600060aa60ff16815260200190815260200160002060006101000a81548160ff02191690831515021790555060016005600060ab60ff16815260200190815260200160002060006101000a81548160ff02191690831515021790555060016005600060ac60ff16815260200190815260200160002060006101000a81548160ff021916908315150217905550505050611079806102576000396000f3fe6080604052600436106100c65760003560e01c80638456cb591161007f5780639e6371ba116100595780639e6371ba14610481578063ce9b7930146104d2578063e0abace214610529578063f851a4401461057f576100cd565b80638456cb59146103d85780638a984538146103ef5780639714378c14610446576100cd565b80633f4ba83a146102a25780634e71d92d146102b957806358bc8337146102d05780635c975abb146103275780636ff968c31461035657806379599f96146103ad576100cd565b366100cd57005b600460149054906101000a900460ff1661014f576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260118152602001807f63616e206e6f74207265656e7472616e7400000000000000000000000000000081525060200191505060405180910390fd5b6000600460146101000a81548160ff0219169083151502179055506000600360009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16600036604051808383808284378083019250505092505050600060405180830381855af49150503d80600081146101f8576040519150601f19603f3d011682016040523d82523d6000602084013e6101fd565b606091505b5050905080610274576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260168152602001807f64656c65676174652063616c6c2072657665727465640000000000000000000081525060200191505060405180910390fd5b6001600460146101000a81548160ff0219169083151502179055506040513d808201604052806000833e3d82f35b3480156102ae57600080fd5b506102b76105d6565b005b3480156102c557600080fd5b506102ce61079a565b005b3480156102dc57600080fd5b506102e56109bc565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561033357600080fd5b5061033c6109c1565b604051808215151515815260200191505060405180910390f35b34801561036257600080fd5b5061036b6109d4565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b3480156103b957600080fd5b506103c26109fa565b6040518082815260200191505060405180910390f35b3480156103e457600080fd5b506103ed610a00565b005b3480156103fb57600080fd5b50610404610c3b565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561045257600080fd5b5061047f6004803603602081101561046957600080fd5b8101908080359060200190929190505050610c61565b005b34801561048d57600080fd5b506104d0600480360360208110156104a457600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190505050610e5b565b005b3480156104de57600080fd5b506104e7610fd8565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561053557600080fd5b506105656004803603602081101561054c57600080fd5b81019080803560ff169060200190929190505050610ffe565b604051808215151515815260200191505060405180910390f35b34801561058b57600080fd5b5061059461101e565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614610698576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260098152602001807f6e6f742061646d696e000000000000000000000000000000000000000000000081525060200191505060405180910390fd5b600160149054906101000a900460ff1661071a576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260148152602001807f6e6f7420706175736564207269676874206e6f7700000000000000000000000081525060200191505060405180910390fd5b6000600160146101000a81548160ff0219169083151502179055507f5db9ee0a495bf2e6ff9c91a7834c1ba4fdd244a5e8aa4e537bd38aeae4b073aa33604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390a1565b6002544210610811576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260078152602001807f657870697265640000000000000000000000000000000000000000000000000081525060200191505060405180910390fd5b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16146108d4576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252600c8152602001807f756e617574686f72697a6564000000000000000000000000000000000000000081525060200191505060405180910390fd5b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff166000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055507f0c7ef932d3b91976772937f18d5ef9b39a9930bef486b576c374f047c4b512dc6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff16604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390a1565b600081565b600160149054906101000a900460ff1681565b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b60025481565b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614610ac2576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260098152602001807f6e6f742061646d696e000000000000000000000000000000000000000000000081525060200191505060405180910390fd5b600160149054906101000a900460ff1615610b45576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260108152602001807f706175736564207269676874206e6f770000000000000000000000000000000081525060200191505060405180910390fd5b6002544210610bbc576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260078152602001807f657870697265640000000000000000000000000000000000000000000000000081525060200191505060405180910390fd5b60018060146101000a81548160ff0219169083151502179055507f62e78cea01bee320cd4e420270b5ea74000d11b0c9f74754ebdbfc544b05a25833604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390a1565b600460009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614610d23576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260098152602001807f6e6f742061646d696e000000000000000000000000000000000000000000000081525060200191505060405180910390fd5b6002544210610d9a576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260078152602001807f657870697265640000000000000000000000000000000000000000000000000081525060200191505060405180910390fd5b61016e8110610e11576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252601a8152602001807f63616e6e6f7420657874656e6420666f7220746f6f206c6f6e6700000000000081525060200191505060405180910390fd5b620151808102600254016002819055507f02ef6561d311451dadc920679eb21192a61d96ee8ead94241b8ff073029ca6e8816040518082815260200191505060405180910390a150565b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614610f1d576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260098152602001807f6e6f742061646d696e000000000000000000000000000000000000000000000081525060200191505060405180910390fd5b6002544210610f94576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260078152602001807f657870697265640000000000000000000000000000000000000000000000000081525060200191505060405180910390fd5b80600160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555050565b600360009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b60056020528060005260406000206000915054906101000a900460ff1681565b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff168156fea2646970667358221220dc57c750a3b5ffeacd55d07c8bf87ab3c8adea9b30e9372c9b0ad4b4166fe68764736f6c63430006060033"
+var DelegatorBin = "0x6080604052604051620010f6380380620010f6833981810160405260608110156200002957600080fd5b810190808051906020019092919080519060200190929190805160405193929190846401000000008211156200005e57600080fd5b838201915060208201858111156200007557600080fd5b82518660018202830111640100000000821117156200009357600080fd5b8083526020830192505050908051906020019080838360005b83811015620000c9578082015181840152602081019050620000ac565b50505050905090810190601f168015620000f75780820380516001836020036101000a031916815260200191505b506040525050508281600160405180807f656970313936372e70726f78792e696d706c656d656e746174696f6e00000000815250601c019050604051809103902060001c0360001b7f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc60001b146200016b57fe5b6200017c826200034060201b60201c565b6000815111156200024e5760008273ffffffffffffffffffffffffffffffffffffffff16826040518082805190602001908083835b60208310620001d65780518252602082019150602081019050602083039250620001b1565b6001836020036101000a038019825116818451168082178552505050505050905001915050600060405180830381855af49150503d806000811462000238576040519150601f19603f3d011682016040523d82523d6000602084013e6200023d565b606091505b50509050806200024c57600080fd5b505b5050600160405180807f656970313936372e70726f78792e61646d696e000000000000000000000000008152506013019050604051809103902060001c0360001b7fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610360001b14620002bb57fe5b600160405180807f656970313936372e70726f78792e737563636573736f720000000000000000008152506017019050604051809103902060001c0360001b7f7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f860001b146200032657fe5b6200033782620003d760201b60201c565b50505062000419565b62000351816200040660201b60201c565b620003a8576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401808060200182810382526036815260200180620010c06036913960400191505060405180910390fd5b60007f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc60001b90508181555050565b60007fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610360001b90508181555050565b600080823b905060008111915050919050565b610c9780620004296000396000f3fe60806040526004361061007f5760003560e01c80636ff968c31161004e5780636ff968c3146101f05780638f283970146102475780639e6371ba14610298578063f851a440146102e95761008e565b80633659cfe6146100985780634e71d92d146100e95780634f1ef286146101005780635c60da1b146101995761008e565b3661008e5761008c610340565b005b610096610340565b005b3480156100a457600080fd5b506100e7600480360360208110156100bb57600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919050505061035a565b005b3480156100f557600080fd5b506100fe6103af565b005b6101976004803603604081101561011657600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff1690602001909291908035906020019064010000000081111561015357600080fd5b82018360208201111561016557600080fd5b8035906020019184600183028401116401000000008311171561018757600080fd5b90919293919293905050506104b6565b005b3480156101a557600080fd5b506101ae61058c565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b3480156101fc57600080fd5b506102056105e4565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561025357600080fd5b506102966004803603602081101561026a57600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919050505061063c565b005b3480156102a457600080fd5b506102e7600480360360208110156102bb57600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff1690602001909291905050506107b5565b005b3480156102f557600080fd5b506102fe61092e565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b610348610986565b610358610353610988565b6109b9565b565b6103626109df565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156103a35761039e81610a10565b6103ac565b6103ab610340565b5b50565b6103b7610a5f565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161461043a576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401808060200182810382526029815260200180610b8f6029913960400191505060405180910390fd5b7f0c7ef932d3b91976772937f18d5ef9b39a9930bef486b576c374f047c4b512dc610463610a5f565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390a16104b46104af610a5f565b610a90565b565b6104be6109df565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16141561057e576104fa83610a10565b60008373ffffffffffffffffffffffffffffffffffffffff168383604051808383808284378083019250505092505050600060405180830381855af49150503d8060008114610565576040519150601f19603f3d011682016040523d82523d6000602084013e61056a565b606091505b505090508061057857600080fd5b50610587565b610586610340565b5b505050565b60006105966109df565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156105d8576105d1610988565b90506105e1565b6105e0610340565b5b90565b60006105ee6109df565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16141561063057610629610a5f565b9050610639565b610638610340565b5b90565b6106446109df565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156107a957600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff1614156106fd576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252603a815260200180610bb8603a913960400191505060405180910390fd5b7f7e644d79422f17c01e4894b5f4f588d331ebfa28653d42ae832dc59e38c9798f6107266109df565b82604051808373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020018273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019250505060405180910390a16107a481610a90565b6107b2565b6107b1610340565b5b50565b6107bd6109df565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16141561092257600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff161415610876576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252603a815260200180610bf2603a913960400191505060405180910390fd5b7ff966f857c3c376f2e1df873bbe2596a18675dc056dc3465dfbbe8fe9ac02c97461089f610a5f565b82604051808373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020018273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019250505060405180910390a161091d81610abf565b61092b565b61092a610340565b5b50565b60006109386109df565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16141561097a576109736109df565b9050610983565b610982610340565b5b90565b565b6000807f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc60001b9050805491505090565b3660008037600080366000845af43d6000803e80600081146109da573d6000f35b3d6000fd5b6000807fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610360001b9050805491505090565b610a1981610aee565b8073ffffffffffffffffffffffffffffffffffffffff167fbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b60405160405180910390a250565b6000807f7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f860001b9050805491505090565b60007fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610360001b90508181555050565b60007f7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f860001b90508181555050565b610af781610b7b565b610b4c576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401808060200182810382526036815260200180610c2c6036913960400191505060405180910390fd5b60007f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc60001b90508181555050565b600080823b90506000811191505091905056fe5472616e73706172656e745570677261646561626c6550726f78793a20756e617574686f72697a65645472616e73706172656e745570677261646561626c6550726f78793a206e65772061646d696e20697320746865207a65726f20616464726573735472616e73706172656e745570677261646561626c6550726f78793a20737563636573736f7220697320746865207a65726f20616464726573735570677261646561626c6550726f78793a206e657720696d706c656d656e746174696f6e206973206e6f74206120636f6e7472616374a26469706673582212201d44800360f447e23aad72ef372ad8d1aa80446b7fef2713878728b52de561e264736f6c634300060600335570677261646561626c6550726f78793a206e657720696d706c656d656e746174696f6e206973206e6f74206120636f6e7472616374"
 
 // DeployDelegator deploys a new Ethereum contract, binding an instance of Delegator to it.
-func DeployDelegator(auth *bind.TransactOpts, backend bind.ContractBackend, _admin common.Address, _delegator common.Address, _incognito common.Address) (common.Address, *types.Transaction, *Delegator, error) {
+func DeployDelegator(auth *bind.TransactOpts, backend bind.ContractBackend, _logic common.Address, _admin common.Address, _data []byte) (common.Address, *types.Transaction, *Delegator, error) {
 	parsed, err := abi.JSON(strings.NewReader(DelegatorABI))
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(DelegatorBin), backend, _admin, _delegator, _incognito)
+	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(DelegatorBin), backend, _logic, _admin, _data)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -188,212 +188,46 @@ func (_Delegator *DelegatorTransactorRaw) Transact(opts *bind.TransactOpts, meth
 	return _Delegator.Contract.contract.Transact(opts, method, params...)
 }
 
-// ETHTOKEN is a free data retrieval call binding the contract method 0x58bc8337.
+// Admin is a paid mutator transaction binding the contract method 0xf851a440.
 //
-// Solidity: function ETH_TOKEN() view returns(address)
-func (_Delegator *DelegatorCaller) ETHTOKEN(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Delegator.contract.Call(opts, out, "ETH_TOKEN")
-	return *ret0, err
+// Solidity: function admin() returns(address)
+func (_Delegator *DelegatorTransactor) Admin(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Delegator.contract.Transact(opts, "admin")
 }
 
-// ETHTOKEN is a free data retrieval call binding the contract method 0x58bc8337.
+// Admin is a paid mutator transaction binding the contract method 0xf851a440.
 //
-// Solidity: function ETH_TOKEN() view returns(address)
-func (_Delegator *DelegatorSession) ETHTOKEN() (common.Address, error) {
-	return _Delegator.Contract.ETHTOKEN(&_Delegator.CallOpts)
+// Solidity: function admin() returns(address)
+func (_Delegator *DelegatorSession) Admin() (*types.Transaction, error) {
+	return _Delegator.Contract.Admin(&_Delegator.TransactOpts)
 }
 
-// ETHTOKEN is a free data retrieval call binding the contract method 0x58bc8337.
+// Admin is a paid mutator transaction binding the contract method 0xf851a440.
 //
-// Solidity: function ETH_TOKEN() view returns(address)
-func (_Delegator *DelegatorCallerSession) ETHTOKEN() (common.Address, error) {
-	return _Delegator.Contract.ETHTOKEN(&_Delegator.CallOpts)
+// Solidity: function admin() returns(address)
+func (_Delegator *DelegatorTransactorSession) Admin() (*types.Transaction, error) {
+	return _Delegator.Contract.Admin(&_Delegator.TransactOpts)
 }
 
-// Admin is a free data retrieval call binding the contract method 0xf851a440.
+// ChangeAdmin is a paid mutator transaction binding the contract method 0x8f283970.
 //
-// Solidity: function admin() view returns(address)
-func (_Delegator *DelegatorCaller) Admin(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Delegator.contract.Call(opts, out, "admin")
-	return *ret0, err
+// Solidity: function changeAdmin(address newAdmin) returns()
+func (_Delegator *DelegatorTransactor) ChangeAdmin(opts *bind.TransactOpts, newAdmin common.Address) (*types.Transaction, error) {
+	return _Delegator.contract.Transact(opts, "changeAdmin", newAdmin)
 }
 
-// Admin is a free data retrieval call binding the contract method 0xf851a440.
+// ChangeAdmin is a paid mutator transaction binding the contract method 0x8f283970.
 //
-// Solidity: function admin() view returns(address)
-func (_Delegator *DelegatorSession) Admin() (common.Address, error) {
-	return _Delegator.Contract.Admin(&_Delegator.CallOpts)
+// Solidity: function changeAdmin(address newAdmin) returns()
+func (_Delegator *DelegatorSession) ChangeAdmin(newAdmin common.Address) (*types.Transaction, error) {
+	return _Delegator.Contract.ChangeAdmin(&_Delegator.TransactOpts, newAdmin)
 }
 
-// Admin is a free data retrieval call binding the contract method 0xf851a440.
+// ChangeAdmin is a paid mutator transaction binding the contract method 0x8f283970.
 //
-// Solidity: function admin() view returns(address)
-func (_Delegator *DelegatorCallerSession) Admin() (common.Address, error) {
-	return _Delegator.Contract.Admin(&_Delegator.CallOpts)
-}
-
-// Delegator is a free data retrieval call binding the contract method 0xce9b7930.
-//
-// Solidity: function delegator() view returns(address)
-func (_Delegator *DelegatorCaller) Delegator(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Delegator.contract.Call(opts, out, "delegator")
-	return *ret0, err
-}
-
-// Delegator is a free data retrieval call binding the contract method 0xce9b7930.
-//
-// Solidity: function delegator() view returns(address)
-func (_Delegator *DelegatorSession) Delegator() (common.Address, error) {
-	return _Delegator.Contract.Delegator(&_Delegator.CallOpts)
-}
-
-// Delegator is a free data retrieval call binding the contract method 0xce9b7930.
-//
-// Solidity: function delegator() view returns(address)
-func (_Delegator *DelegatorCallerSession) Delegator() (common.Address, error) {
-	return _Delegator.Contract.Delegator(&_Delegator.CallOpts)
-}
-
-// Expire is a free data retrieval call binding the contract method 0x79599f96.
-//
-// Solidity: function expire() view returns(uint256)
-func (_Delegator *DelegatorCaller) Expire(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Delegator.contract.Call(opts, out, "expire")
-	return *ret0, err
-}
-
-// Expire is a free data retrieval call binding the contract method 0x79599f96.
-//
-// Solidity: function expire() view returns(uint256)
-func (_Delegator *DelegatorSession) Expire() (*big.Int, error) {
-	return _Delegator.Contract.Expire(&_Delegator.CallOpts)
-}
-
-// Expire is a free data retrieval call binding the contract method 0x79599f96.
-//
-// Solidity: function expire() view returns(uint256)
-func (_Delegator *DelegatorCallerSession) Expire() (*big.Int, error) {
-	return _Delegator.Contract.Expire(&_Delegator.CallOpts)
-}
-
-// Incognito is a free data retrieval call binding the contract method 0x8a984538.
-//
-// Solidity: function incognito() view returns(address)
-func (_Delegator *DelegatorCaller) Incognito(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Delegator.contract.Call(opts, out, "incognito")
-	return *ret0, err
-}
-
-// Incognito is a free data retrieval call binding the contract method 0x8a984538.
-//
-// Solidity: function incognito() view returns(address)
-func (_Delegator *DelegatorSession) Incognito() (common.Address, error) {
-	return _Delegator.Contract.Incognito(&_Delegator.CallOpts)
-}
-
-// Incognito is a free data retrieval call binding the contract method 0x8a984538.
-//
-// Solidity: function incognito() view returns(address)
-func (_Delegator *DelegatorCallerSession) Incognito() (common.Address, error) {
-	return _Delegator.Contract.Incognito(&_Delegator.CallOpts)
-}
-
-// Metadata is a free data retrieval call binding the contract method 0xe0abace2.
-//
-// Solidity: function metadata(uint8 ) view returns(bool)
-func (_Delegator *DelegatorCaller) Metadata(opts *bind.CallOpts, arg0 uint8) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Delegator.contract.Call(opts, out, "metadata", arg0)
-	return *ret0, err
-}
-
-// Metadata is a free data retrieval call binding the contract method 0xe0abace2.
-//
-// Solidity: function metadata(uint8 ) view returns(bool)
-func (_Delegator *DelegatorSession) Metadata(arg0 uint8) (bool, error) {
-	return _Delegator.Contract.Metadata(&_Delegator.CallOpts, arg0)
-}
-
-// Metadata is a free data retrieval call binding the contract method 0xe0abace2.
-//
-// Solidity: function metadata(uint8 ) view returns(bool)
-func (_Delegator *DelegatorCallerSession) Metadata(arg0 uint8) (bool, error) {
-	return _Delegator.Contract.Metadata(&_Delegator.CallOpts, arg0)
-}
-
-// Paused is a free data retrieval call binding the contract method 0x5c975abb.
-//
-// Solidity: function paused() view returns(bool)
-func (_Delegator *DelegatorCaller) Paused(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Delegator.contract.Call(opts, out, "paused")
-	return *ret0, err
-}
-
-// Paused is a free data retrieval call binding the contract method 0x5c975abb.
-//
-// Solidity: function paused() view returns(bool)
-func (_Delegator *DelegatorSession) Paused() (bool, error) {
-	return _Delegator.Contract.Paused(&_Delegator.CallOpts)
-}
-
-// Paused is a free data retrieval call binding the contract method 0x5c975abb.
-//
-// Solidity: function paused() view returns(bool)
-func (_Delegator *DelegatorCallerSession) Paused() (bool, error) {
-	return _Delegator.Contract.Paused(&_Delegator.CallOpts)
-}
-
-// Successor is a free data retrieval call binding the contract method 0x6ff968c3.
-//
-// Solidity: function successor() view returns(address)
-func (_Delegator *DelegatorCaller) Successor(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Delegator.contract.Call(opts, out, "successor")
-	return *ret0, err
-}
-
-// Successor is a free data retrieval call binding the contract method 0x6ff968c3.
-//
-// Solidity: function successor() view returns(address)
-func (_Delegator *DelegatorSession) Successor() (common.Address, error) {
-	return _Delegator.Contract.Successor(&_Delegator.CallOpts)
-}
-
-// Successor is a free data retrieval call binding the contract method 0x6ff968c3.
-//
-// Solidity: function successor() view returns(address)
-func (_Delegator *DelegatorCallerSession) Successor() (common.Address, error) {
-	return _Delegator.Contract.Successor(&_Delegator.CallOpts)
+// Solidity: function changeAdmin(address newAdmin) returns()
+func (_Delegator *DelegatorTransactorSession) ChangeAdmin(newAdmin common.Address) (*types.Transaction, error) {
+	return _Delegator.Contract.ChangeAdmin(&_Delegator.TransactOpts, newAdmin)
 }
 
 // Claim is a paid mutator transaction binding the contract method 0x4e71d92d.
@@ -417,88 +251,243 @@ func (_Delegator *DelegatorTransactorSession) Claim() (*types.Transaction, error
 	return _Delegator.Contract.Claim(&_Delegator.TransactOpts)
 }
 
-// Extend is a paid mutator transaction binding the contract method 0x9714378c.
+// Implementation is a paid mutator transaction binding the contract method 0x5c60da1b.
 //
-// Solidity: function extend(uint256 n) returns()
-func (_Delegator *DelegatorTransactor) Extend(opts *bind.TransactOpts, n *big.Int) (*types.Transaction, error) {
-	return _Delegator.contract.Transact(opts, "extend", n)
+// Solidity: function implementation() returns(address)
+func (_Delegator *DelegatorTransactor) Implementation(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Delegator.contract.Transact(opts, "implementation")
 }
 
-// Extend is a paid mutator transaction binding the contract method 0x9714378c.
+// Implementation is a paid mutator transaction binding the contract method 0x5c60da1b.
 //
-// Solidity: function extend(uint256 n) returns()
-func (_Delegator *DelegatorSession) Extend(n *big.Int) (*types.Transaction, error) {
-	return _Delegator.Contract.Extend(&_Delegator.TransactOpts, n)
+// Solidity: function implementation() returns(address)
+func (_Delegator *DelegatorSession) Implementation() (*types.Transaction, error) {
+	return _Delegator.Contract.Implementation(&_Delegator.TransactOpts)
 }
 
-// Extend is a paid mutator transaction binding the contract method 0x9714378c.
+// Implementation is a paid mutator transaction binding the contract method 0x5c60da1b.
 //
-// Solidity: function extend(uint256 n) returns()
-func (_Delegator *DelegatorTransactorSession) Extend(n *big.Int) (*types.Transaction, error) {
-	return _Delegator.Contract.Extend(&_Delegator.TransactOpts, n)
-}
-
-// Pause is a paid mutator transaction binding the contract method 0x8456cb59.
-//
-// Solidity: function pause() returns()
-func (_Delegator *DelegatorTransactor) Pause(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Delegator.contract.Transact(opts, "pause")
-}
-
-// Pause is a paid mutator transaction binding the contract method 0x8456cb59.
-//
-// Solidity: function pause() returns()
-func (_Delegator *DelegatorSession) Pause() (*types.Transaction, error) {
-	return _Delegator.Contract.Pause(&_Delegator.TransactOpts)
-}
-
-// Pause is a paid mutator transaction binding the contract method 0x8456cb59.
-//
-// Solidity: function pause() returns()
-func (_Delegator *DelegatorTransactorSession) Pause() (*types.Transaction, error) {
-	return _Delegator.Contract.Pause(&_Delegator.TransactOpts)
+// Solidity: function implementation() returns(address)
+func (_Delegator *DelegatorTransactorSession) Implementation() (*types.Transaction, error) {
+	return _Delegator.Contract.Implementation(&_Delegator.TransactOpts)
 }
 
 // Retire is a paid mutator transaction binding the contract method 0x9e6371ba.
 //
-// Solidity: function retire(address _successor) returns()
-func (_Delegator *DelegatorTransactor) Retire(opts *bind.TransactOpts, _successor common.Address) (*types.Transaction, error) {
-	return _Delegator.contract.Transact(opts, "retire", _successor)
+// Solidity: function retire(address newSuccessor) returns()
+func (_Delegator *DelegatorTransactor) Retire(opts *bind.TransactOpts, newSuccessor common.Address) (*types.Transaction, error) {
+	return _Delegator.contract.Transact(opts, "retire", newSuccessor)
 }
 
 // Retire is a paid mutator transaction binding the contract method 0x9e6371ba.
 //
-// Solidity: function retire(address _successor) returns()
-func (_Delegator *DelegatorSession) Retire(_successor common.Address) (*types.Transaction, error) {
-	return _Delegator.Contract.Retire(&_Delegator.TransactOpts, _successor)
+// Solidity: function retire(address newSuccessor) returns()
+func (_Delegator *DelegatorSession) Retire(newSuccessor common.Address) (*types.Transaction, error) {
+	return _Delegator.Contract.Retire(&_Delegator.TransactOpts, newSuccessor)
 }
 
 // Retire is a paid mutator transaction binding the contract method 0x9e6371ba.
 //
-// Solidity: function retire(address _successor) returns()
-func (_Delegator *DelegatorTransactorSession) Retire(_successor common.Address) (*types.Transaction, error) {
-	return _Delegator.Contract.Retire(&_Delegator.TransactOpts, _successor)
+// Solidity: function retire(address newSuccessor) returns()
+func (_Delegator *DelegatorTransactorSession) Retire(newSuccessor common.Address) (*types.Transaction, error) {
+	return _Delegator.Contract.Retire(&_Delegator.TransactOpts, newSuccessor)
 }
 
-// Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
+// Successor is a paid mutator transaction binding the contract method 0x6ff968c3.
 //
-// Solidity: function unpause() returns()
-func (_Delegator *DelegatorTransactor) Unpause(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Delegator.contract.Transact(opts, "unpause")
+// Solidity: function successor() returns(address)
+func (_Delegator *DelegatorTransactor) Successor(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Delegator.contract.Transact(opts, "successor")
 }
 
-// Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
+// Successor is a paid mutator transaction binding the contract method 0x6ff968c3.
 //
-// Solidity: function unpause() returns()
-func (_Delegator *DelegatorSession) Unpause() (*types.Transaction, error) {
-	return _Delegator.Contract.Unpause(&_Delegator.TransactOpts)
+// Solidity: function successor() returns(address)
+func (_Delegator *DelegatorSession) Successor() (*types.Transaction, error) {
+	return _Delegator.Contract.Successor(&_Delegator.TransactOpts)
 }
 
-// Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
+// Successor is a paid mutator transaction binding the contract method 0x6ff968c3.
 //
-// Solidity: function unpause() returns()
-func (_Delegator *DelegatorTransactorSession) Unpause() (*types.Transaction, error) {
-	return _Delegator.Contract.Unpause(&_Delegator.TransactOpts)
+// Solidity: function successor() returns(address)
+func (_Delegator *DelegatorTransactorSession) Successor() (*types.Transaction, error) {
+	return _Delegator.Contract.Successor(&_Delegator.TransactOpts)
+}
+
+// UpgradeTo is a paid mutator transaction binding the contract method 0x3659cfe6.
+//
+// Solidity: function upgradeTo(address newImplementation) returns()
+func (_Delegator *DelegatorTransactor) UpgradeTo(opts *bind.TransactOpts, newImplementation common.Address) (*types.Transaction, error) {
+	return _Delegator.contract.Transact(opts, "upgradeTo", newImplementation)
+}
+
+// UpgradeTo is a paid mutator transaction binding the contract method 0x3659cfe6.
+//
+// Solidity: function upgradeTo(address newImplementation) returns()
+func (_Delegator *DelegatorSession) UpgradeTo(newImplementation common.Address) (*types.Transaction, error) {
+	return _Delegator.Contract.UpgradeTo(&_Delegator.TransactOpts, newImplementation)
+}
+
+// UpgradeTo is a paid mutator transaction binding the contract method 0x3659cfe6.
+//
+// Solidity: function upgradeTo(address newImplementation) returns()
+func (_Delegator *DelegatorTransactorSession) UpgradeTo(newImplementation common.Address) (*types.Transaction, error) {
+	return _Delegator.Contract.UpgradeTo(&_Delegator.TransactOpts, newImplementation)
+}
+
+// UpgradeToAndCall is a paid mutator transaction binding the contract method 0x4f1ef286.
+//
+// Solidity: function upgradeToAndCall(address newImplementation, bytes data) payable returns()
+func (_Delegator *DelegatorTransactor) UpgradeToAndCall(opts *bind.TransactOpts, newImplementation common.Address, data []byte) (*types.Transaction, error) {
+	return _Delegator.contract.Transact(opts, "upgradeToAndCall", newImplementation, data)
+}
+
+// UpgradeToAndCall is a paid mutator transaction binding the contract method 0x4f1ef286.
+//
+// Solidity: function upgradeToAndCall(address newImplementation, bytes data) payable returns()
+func (_Delegator *DelegatorSession) UpgradeToAndCall(newImplementation common.Address, data []byte) (*types.Transaction, error) {
+	return _Delegator.Contract.UpgradeToAndCall(&_Delegator.TransactOpts, newImplementation, data)
+}
+
+// UpgradeToAndCall is a paid mutator transaction binding the contract method 0x4f1ef286.
+//
+// Solidity: function upgradeToAndCall(address newImplementation, bytes data) payable returns()
+func (_Delegator *DelegatorTransactorSession) UpgradeToAndCall(newImplementation common.Address, data []byte) (*types.Transaction, error) {
+	return _Delegator.Contract.UpgradeToAndCall(&_Delegator.TransactOpts, newImplementation, data)
+}
+
+// DelegatorAdminChangedIterator is returned from FilterAdminChanged and is used to iterate over the raw logs and unpacked data for AdminChanged events raised by the Delegator contract.
+type DelegatorAdminChangedIterator struct {
+	Event *DelegatorAdminChanged // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *DelegatorAdminChangedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(DelegatorAdminChanged)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(DelegatorAdminChanged)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *DelegatorAdminChangedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *DelegatorAdminChangedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// DelegatorAdminChanged represents a AdminChanged event raised by the Delegator contract.
+type DelegatorAdminChanged struct {
+	PreviousAdmin common.Address
+	NewAdmin      common.Address
+	Raw           types.Log // Blockchain specific contextual infos
+}
+
+// FilterAdminChanged is a free log retrieval operation binding the contract event 0x7e644d79422f17c01e4894b5f4f588d331ebfa28653d42ae832dc59e38c9798f.
+//
+// Solidity: event AdminChanged(address previousAdmin, address newAdmin)
+func (_Delegator *DelegatorFilterer) FilterAdminChanged(opts *bind.FilterOpts) (*DelegatorAdminChangedIterator, error) {
+
+	logs, sub, err := _Delegator.contract.FilterLogs(opts, "AdminChanged")
+	if err != nil {
+		return nil, err
+	}
+	return &DelegatorAdminChangedIterator{contract: _Delegator.contract, event: "AdminChanged", logs: logs, sub: sub}, nil
+}
+
+// WatchAdminChanged is a free log subscription operation binding the contract event 0x7e644d79422f17c01e4894b5f4f588d331ebfa28653d42ae832dc59e38c9798f.
+//
+// Solidity: event AdminChanged(address previousAdmin, address newAdmin)
+func (_Delegator *DelegatorFilterer) WatchAdminChanged(opts *bind.WatchOpts, sink chan<- *DelegatorAdminChanged) (event.Subscription, error) {
+
+	logs, sub, err := _Delegator.contract.WatchLogs(opts, "AdminChanged")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(DelegatorAdminChanged)
+				if err := _Delegator.contract.UnpackLog(event, "AdminChanged", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseAdminChanged is a log parse operation binding the contract event 0x7e644d79422f17c01e4894b5f4f588d331ebfa28653d42ae832dc59e38c9798f.
+//
+// Solidity: event AdminChanged(address previousAdmin, address newAdmin)
+func (_Delegator *DelegatorFilterer) ParseAdminChanged(log types.Log) (*DelegatorAdminChanged, error) {
+	event := new(DelegatorAdminChanged)
+	if err := _Delegator.contract.UnpackLog(event, "AdminChanged", log); err != nil {
+		return nil, err
+	}
+	return event, nil
 }
 
 // DelegatorClaimIterator is returned from FilterClaim and is used to iterate over the raw logs and unpacked data for Claim events raised by the Delegator contract.
@@ -634,9 +623,9 @@ func (_Delegator *DelegatorFilterer) ParseClaim(log types.Log) (*DelegatorClaim,
 	return event, nil
 }
 
-// DelegatorExtendIterator is returned from FilterExtend and is used to iterate over the raw logs and unpacked data for Extend events raised by the Delegator contract.
-type DelegatorExtendIterator struct {
-	Event *DelegatorExtend // Event containing the contract specifics and raw log
+// DelegatorSuccessorChangedIterator is returned from FilterSuccessorChanged and is used to iterate over the raw logs and unpacked data for SuccessorChanged events raised by the Delegator contract.
+type DelegatorSuccessorChangedIterator struct {
+	Event *DelegatorSuccessorChanged // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -650,7 +639,7 @@ type DelegatorExtendIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *DelegatorExtendIterator) Next() bool {
+func (it *DelegatorSuccessorChangedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -659,7 +648,7 @@ func (it *DelegatorExtendIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(DelegatorExtend)
+			it.Event = new(DelegatorSuccessorChanged)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -674,7 +663,7 @@ func (it *DelegatorExtendIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(DelegatorExtend)
+		it.Event = new(DelegatorSuccessorChanged)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -690,41 +679,42 @@ func (it *DelegatorExtendIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *DelegatorExtendIterator) Error() error {
+func (it *DelegatorSuccessorChangedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *DelegatorExtendIterator) Close() error {
+func (it *DelegatorSuccessorChangedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// DelegatorExtend represents a Extend event raised by the Delegator contract.
-type DelegatorExtend struct {
-	Ndays *big.Int
-	Raw   types.Log // Blockchain specific contextual infos
+// DelegatorSuccessorChanged represents a SuccessorChanged event raised by the Delegator contract.
+type DelegatorSuccessorChanged struct {
+	PreviousSuccessor common.Address
+	NewSuccessor      common.Address
+	Raw               types.Log // Blockchain specific contextual infos
 }
 
-// FilterExtend is a free log retrieval operation binding the contract event 0x02ef6561d311451dadc920679eb21192a61d96ee8ead94241b8ff073029ca6e8.
+// FilterSuccessorChanged is a free log retrieval operation binding the contract event 0xf966f857c3c376f2e1df873bbe2596a18675dc056dc3465dfbbe8fe9ac02c974.
 //
-// Solidity: event Extend(uint256 ndays)
-func (_Delegator *DelegatorFilterer) FilterExtend(opts *bind.FilterOpts) (*DelegatorExtendIterator, error) {
+// Solidity: event SuccessorChanged(address previousSuccessor, address newSuccessor)
+func (_Delegator *DelegatorFilterer) FilterSuccessorChanged(opts *bind.FilterOpts) (*DelegatorSuccessorChangedIterator, error) {
 
-	logs, sub, err := _Delegator.contract.FilterLogs(opts, "Extend")
+	logs, sub, err := _Delegator.contract.FilterLogs(opts, "SuccessorChanged")
 	if err != nil {
 		return nil, err
 	}
-	return &DelegatorExtendIterator{contract: _Delegator.contract, event: "Extend", logs: logs, sub: sub}, nil
+	return &DelegatorSuccessorChangedIterator{contract: _Delegator.contract, event: "SuccessorChanged", logs: logs, sub: sub}, nil
 }
 
-// WatchExtend is a free log subscription operation binding the contract event 0x02ef6561d311451dadc920679eb21192a61d96ee8ead94241b8ff073029ca6e8.
+// WatchSuccessorChanged is a free log subscription operation binding the contract event 0xf966f857c3c376f2e1df873bbe2596a18675dc056dc3465dfbbe8fe9ac02c974.
 //
-// Solidity: event Extend(uint256 ndays)
-func (_Delegator *DelegatorFilterer) WatchExtend(opts *bind.WatchOpts, sink chan<- *DelegatorExtend) (event.Subscription, error) {
+// Solidity: event SuccessorChanged(address previousSuccessor, address newSuccessor)
+func (_Delegator *DelegatorFilterer) WatchSuccessorChanged(opts *bind.WatchOpts, sink chan<- *DelegatorSuccessorChanged) (event.Subscription, error) {
 
-	logs, sub, err := _Delegator.contract.WatchLogs(opts, "Extend")
+	logs, sub, err := _Delegator.contract.WatchLogs(opts, "SuccessorChanged")
 	if err != nil {
 		return nil, err
 	}
@@ -734,8 +724,8 @@ func (_Delegator *DelegatorFilterer) WatchExtend(opts *bind.WatchOpts, sink chan
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(DelegatorExtend)
-				if err := _Delegator.contract.UnpackLog(event, "Extend", log); err != nil {
+				event := new(DelegatorSuccessorChanged)
+				if err := _Delegator.contract.UnpackLog(event, "SuccessorChanged", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -756,20 +746,20 @@ func (_Delegator *DelegatorFilterer) WatchExtend(opts *bind.WatchOpts, sink chan
 	}), nil
 }
 
-// ParseExtend is a log parse operation binding the contract event 0x02ef6561d311451dadc920679eb21192a61d96ee8ead94241b8ff073029ca6e8.
+// ParseSuccessorChanged is a log parse operation binding the contract event 0xf966f857c3c376f2e1df873bbe2596a18675dc056dc3465dfbbe8fe9ac02c974.
 //
-// Solidity: event Extend(uint256 ndays)
-func (_Delegator *DelegatorFilterer) ParseExtend(log types.Log) (*DelegatorExtend, error) {
-	event := new(DelegatorExtend)
-	if err := _Delegator.contract.UnpackLog(event, "Extend", log); err != nil {
+// Solidity: event SuccessorChanged(address previousSuccessor, address newSuccessor)
+func (_Delegator *DelegatorFilterer) ParseSuccessorChanged(log types.Log) (*DelegatorSuccessorChanged, error) {
+	event := new(DelegatorSuccessorChanged)
+	if err := _Delegator.contract.UnpackLog(event, "SuccessorChanged", log); err != nil {
 		return nil, err
 	}
 	return event, nil
 }
 
-// DelegatorPausedIterator is returned from FilterPaused and is used to iterate over the raw logs and unpacked data for Paused events raised by the Delegator contract.
-type DelegatorPausedIterator struct {
-	Event *DelegatorPaused // Event containing the contract specifics and raw log
+// DelegatorUpgradedIterator is returned from FilterUpgraded and is used to iterate over the raw logs and unpacked data for Upgraded events raised by the Delegator contract.
+type DelegatorUpgradedIterator struct {
+	Event *DelegatorUpgraded // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -783,7 +773,7 @@ type DelegatorPausedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *DelegatorPausedIterator) Next() bool {
+func (it *DelegatorUpgradedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -792,7 +782,7 @@ func (it *DelegatorPausedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(DelegatorPaused)
+			it.Event = new(DelegatorUpgraded)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -807,7 +797,7 @@ func (it *DelegatorPausedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(DelegatorPaused)
+		it.Event = new(DelegatorUpgraded)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -823,41 +813,51 @@ func (it *DelegatorPausedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *DelegatorPausedIterator) Error() error {
+func (it *DelegatorUpgradedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *DelegatorPausedIterator) Close() error {
+func (it *DelegatorUpgradedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// DelegatorPaused represents a Paused event raised by the Delegator contract.
-type DelegatorPaused struct {
-	Pauser common.Address
-	Raw    types.Log // Blockchain specific contextual infos
+// DelegatorUpgraded represents a Upgraded event raised by the Delegator contract.
+type DelegatorUpgraded struct {
+	Implementation common.Address
+	Raw            types.Log // Blockchain specific contextual infos
 }
 
-// FilterPaused is a free log retrieval operation binding the contract event 0x62e78cea01bee320cd4e420270b5ea74000d11b0c9f74754ebdbfc544b05a258.
+// FilterUpgraded is a free log retrieval operation binding the contract event 0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b.
 //
-// Solidity: event Paused(address pauser)
-func (_Delegator *DelegatorFilterer) FilterPaused(opts *bind.FilterOpts) (*DelegatorPausedIterator, error) {
+// Solidity: event Upgraded(address indexed implementation)
+func (_Delegator *DelegatorFilterer) FilterUpgraded(opts *bind.FilterOpts, implementation []common.Address) (*DelegatorUpgradedIterator, error) {
 
-	logs, sub, err := _Delegator.contract.FilterLogs(opts, "Paused")
+	var implementationRule []interface{}
+	for _, implementationItem := range implementation {
+		implementationRule = append(implementationRule, implementationItem)
+	}
+
+	logs, sub, err := _Delegator.contract.FilterLogs(opts, "Upgraded", implementationRule)
 	if err != nil {
 		return nil, err
 	}
-	return &DelegatorPausedIterator{contract: _Delegator.contract, event: "Paused", logs: logs, sub: sub}, nil
+	return &DelegatorUpgradedIterator{contract: _Delegator.contract, event: "Upgraded", logs: logs, sub: sub}, nil
 }
 
-// WatchPaused is a free log subscription operation binding the contract event 0x62e78cea01bee320cd4e420270b5ea74000d11b0c9f74754ebdbfc544b05a258.
+// WatchUpgraded is a free log subscription operation binding the contract event 0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b.
 //
-// Solidity: event Paused(address pauser)
-func (_Delegator *DelegatorFilterer) WatchPaused(opts *bind.WatchOpts, sink chan<- *DelegatorPaused) (event.Subscription, error) {
+// Solidity: event Upgraded(address indexed implementation)
+func (_Delegator *DelegatorFilterer) WatchUpgraded(opts *bind.WatchOpts, sink chan<- *DelegatorUpgraded, implementation []common.Address) (event.Subscription, error) {
 
-	logs, sub, err := _Delegator.contract.WatchLogs(opts, "Paused")
+	var implementationRule []interface{}
+	for _, implementationItem := range implementation {
+		implementationRule = append(implementationRule, implementationItem)
+	}
+
+	logs, sub, err := _Delegator.contract.WatchLogs(opts, "Upgraded", implementationRule)
 	if err != nil {
 		return nil, err
 	}
@@ -867,8 +867,8 @@ func (_Delegator *DelegatorFilterer) WatchPaused(opts *bind.WatchOpts, sink chan
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(DelegatorPaused)
-				if err := _Delegator.contract.UnpackLog(event, "Paused", log); err != nil {
+				event := new(DelegatorUpgraded)
+				if err := _Delegator.contract.UnpackLog(event, "Upgraded", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -889,145 +889,12 @@ func (_Delegator *DelegatorFilterer) WatchPaused(opts *bind.WatchOpts, sink chan
 	}), nil
 }
 
-// ParsePaused is a log parse operation binding the contract event 0x62e78cea01bee320cd4e420270b5ea74000d11b0c9f74754ebdbfc544b05a258.
+// ParseUpgraded is a log parse operation binding the contract event 0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b.
 //
-// Solidity: event Paused(address pauser)
-func (_Delegator *DelegatorFilterer) ParsePaused(log types.Log) (*DelegatorPaused, error) {
-	event := new(DelegatorPaused)
-	if err := _Delegator.contract.UnpackLog(event, "Paused", log); err != nil {
-		return nil, err
-	}
-	return event, nil
-}
-
-// DelegatorUnpausedIterator is returned from FilterUnpaused and is used to iterate over the raw logs and unpacked data for Unpaused events raised by the Delegator contract.
-type DelegatorUnpausedIterator struct {
-	Event *DelegatorUnpaused // Event containing the contract specifics and raw log
-
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
-	event    string              // Event name to use for unpacking event data
-
-	logs chan types.Log        // Log channel receiving the found contract events
-	sub  ethereum.Subscription // Subscription for errors, completion and termination
-	done bool                  // Whether the subscription completed delivering logs
-	fail error                 // Occurred error to stop iteration
-}
-
-// Next advances the iterator to the subsequent event, returning whether there
-// are any more events found. In case of a retrieval or parsing error, false is
-// returned and Error() can be queried for the exact failure.
-func (it *DelegatorUnpausedIterator) Next() bool {
-	// If the iterator failed, stop iterating
-	if it.fail != nil {
-		return false
-	}
-	// If the iterator completed, deliver directly whatever's available
-	if it.done {
-		select {
-		case log := <-it.logs:
-			it.Event = new(DelegatorUnpaused)
-			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-				it.fail = err
-				return false
-			}
-			it.Event.Raw = log
-			return true
-
-		default:
-			return false
-		}
-	}
-	// Iterator still in progress, wait for either a data or an error event
-	select {
-	case log := <-it.logs:
-		it.Event = new(DelegatorUnpaused)
-		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-			it.fail = err
-			return false
-		}
-		it.Event.Raw = log
-		return true
-
-	case err := <-it.sub.Err():
-		it.done = true
-		it.fail = err
-		return it.Next()
-	}
-}
-
-// Error returns any retrieval or parsing error occurred during filtering.
-func (it *DelegatorUnpausedIterator) Error() error {
-	return it.fail
-}
-
-// Close terminates the iteration process, releasing any pending underlying
-// resources.
-func (it *DelegatorUnpausedIterator) Close() error {
-	it.sub.Unsubscribe()
-	return nil
-}
-
-// DelegatorUnpaused represents a Unpaused event raised by the Delegator contract.
-type DelegatorUnpaused struct {
-	Pauser common.Address
-	Raw    types.Log // Blockchain specific contextual infos
-}
-
-// FilterUnpaused is a free log retrieval operation binding the contract event 0x5db9ee0a495bf2e6ff9c91a7834c1ba4fdd244a5e8aa4e537bd38aeae4b073aa.
-//
-// Solidity: event Unpaused(address pauser)
-func (_Delegator *DelegatorFilterer) FilterUnpaused(opts *bind.FilterOpts) (*DelegatorUnpausedIterator, error) {
-
-	logs, sub, err := _Delegator.contract.FilterLogs(opts, "Unpaused")
-	if err != nil {
-		return nil, err
-	}
-	return &DelegatorUnpausedIterator{contract: _Delegator.contract, event: "Unpaused", logs: logs, sub: sub}, nil
-}
-
-// WatchUnpaused is a free log subscription operation binding the contract event 0x5db9ee0a495bf2e6ff9c91a7834c1ba4fdd244a5e8aa4e537bd38aeae4b073aa.
-//
-// Solidity: event Unpaused(address pauser)
-func (_Delegator *DelegatorFilterer) WatchUnpaused(opts *bind.WatchOpts, sink chan<- *DelegatorUnpaused) (event.Subscription, error) {
-
-	logs, sub, err := _Delegator.contract.WatchLogs(opts, "Unpaused")
-	if err != nil {
-		return nil, err
-	}
-	return event.NewSubscription(func(quit <-chan struct{}) error {
-		defer sub.Unsubscribe()
-		for {
-			select {
-			case log := <-logs:
-				// New log arrived, parse the event and forward to the user
-				event := new(DelegatorUnpaused)
-				if err := _Delegator.contract.UnpackLog(event, "Unpaused", log); err != nil {
-					return err
-				}
-				event.Raw = log
-
-				select {
-				case sink <- event:
-				case err := <-sub.Err():
-					return err
-				case <-quit:
-					return nil
-				}
-			case err := <-sub.Err():
-				return err
-			case <-quit:
-				return nil
-			}
-		}
-	}), nil
-}
-
-// ParseUnpaused is a log parse operation binding the contract event 0x5db9ee0a495bf2e6ff9c91a7834c1ba4fdd244a5e8aa4e537bd38aeae4b073aa.
-//
-// Solidity: event Unpaused(address pauser)
-func (_Delegator *DelegatorFilterer) ParseUnpaused(log types.Log) (*DelegatorUnpaused, error) {
-	event := new(DelegatorUnpaused)
-	if err := _Delegator.contract.UnpackLog(event, "Unpaused", log); err != nil {
+// Solidity: event Upgraded(address indexed implementation)
+func (_Delegator *DelegatorFilterer) ParseUpgraded(log types.Log) (*DelegatorUpgraded, error) {
+	event := new(DelegatorUpgraded)
+	if err := _Delegator.contract.UnpackLog(event, "Upgraded", log); err != nil {
 		return nil, err
 	}
 	return event, nil

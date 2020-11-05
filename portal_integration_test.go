@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"fmt"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -109,8 +110,12 @@ func (pg *PortalIntegrationTestSuite) SetupSuite() {
 	portalv3Logic, _, _, err := portalv3.DeployPortalv3(pg.auth, pg.ETHClient)
 	require.Equal(pg.T(), nil, err)
 	fmt.Printf("portalv3 address: %s\n", portalv3Logic.Hex())
+
+	portalv3ABI, _ := abi.JSON(strings.NewReader(portalv3.Portalv3ABI))
+	input, _ := portalv3ABI.Pack("initialize", incAddr)
+
 	//PortalV3
-	pg.Portalv3, _, _, err = delegator.DeployDelegator(pg.auth, pg.ETHClient, pg.auth.From, portalv3Logic, incAddr)
+	pg.Portalv3, _, _, err = delegator.DeployDelegator(pg.auth, pg.ETHClient, portalv3Logic, pg.auth.From, input)
 	require.Equal(pg.T(), nil, err)
 	fmt.Printf("delegator address: %s\n", pg.Portalv3.Hex())
 	pg.portalV3Inst, err = portalv3.NewPortalv3(pg.Portalv3, pg.ETHClient)
@@ -299,8 +304,8 @@ func (pg *PortalIntegrationTestSuite) Test2CustodianWithdraw() {
 
 //func (pg *PortalIntegrationTestSuite) Test3SubmitEthProof() {
 //	// submit to portal contract
-//	txID := "place tx to get proof here"
-//	withdrawProof, err := getAndDecodeProofV3(pg.IncRPCHost, txID, "getportalwithdrawcollateralproof", 171)
+//	txID := "5cee7e07b23ae065f7e59722a521c9d61d858573c9e20fbe832f967e36641d8f"
+//	withdrawProof, err := getAndDecodeProofV3(pg.IncRPCHost, txID, "getportalwithdrawcollateralproof", 172)
 //	require.Equal(pg.T(), nil, err)
 //	balanceBefore, err := pg.ETHClient.BalanceAt(context.Background(), common.HexToAddress(pg.ETHOwnerAddrStr), nil)
 //	require.Equal(pg.T(), nil, err)
@@ -309,7 +314,7 @@ func (pg *PortalIntegrationTestSuite) Test2CustodianWithdraw() {
 //	balanceAfter, err := pg.ETHClient.BalanceAt(context.Background(), common.HexToAddress(pg.ETHOwnerAddrStr), nil)
 //	require.Equal(pg.T(), nil, err)
 //	fmt.Println(big.NewInt(0).Sub(balanceAfter, balanceBefore).String())
-//	require.Equal(pg.T(), 0, big.NewInt(0).Sub(balanceAfter, balanceBefore).Cmp(big.NewInt(74750000 * 1e9 )))
+//	require.Equal(pg.T(), 0, big.NewInt(0).Sub(balanceAfter, balanceBefore).Cmp(big.NewInt(5000000 * 1e9 )))
 //}
 
 func ethInstance(ethPrivate string, ethEnpoint string) (*ecdsa.PrivateKey, *ethclient.Client, error) {

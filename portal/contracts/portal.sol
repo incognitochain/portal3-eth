@@ -55,13 +55,14 @@ interface Incognito {
 }
 
 contract PortalV3 is AdminPausable {
+
+    using SafeMath for uint;
     address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
     address public delegator;
     Incognito public incognito;
     bool notEntered = true;
+    bool isInitialized = false;
     mapping(uint8 => bool) public metadata;
-
-    using SafeMath for uint;
     mapping(bytes32 => bool) public withdrawed;
     struct BurnInstData {
         uint8 meta; // type of the instruction
@@ -78,13 +79,52 @@ contract PortalV3 is AdminPausable {
     event IncognitoProxy(address);
     event MetaData(uint8, bool);
 
-    function deposit(string calldata custodianIncAddress) isNotPaused  payable external {
+    /**
+     * @dev Prevents a contract from calling itself, directly or indirectly.
+     * Calling a `nonReentrant` function from another `nonReentrant`
+     * function is not supported. It is possible to prevent this from happening
+     * by making the `nonReentrant` function external, and make it call a
+     * `private` function that does the actual work.
+     */
+    modifier nonReentrant() {
+        // On the first call to nonReentrant, notEntered will be true
+        require(notEntered, "can not reentrant to vault");
+
+        // Any calls to nonReentrant after this point will fail
+        notEntered = false;
+
+        _;
+
+        // By storing the original value once again, a refund is triggered (see
+        // https://eips.ethereum.org/EIPS/eip-2200)
+        notEntered = true;
+    }
+
+    /**
+     * @dev Creates new Vault to hold assets for Incognito Chain
+     * @param incognitoProxyAddress: contract containing Incognito's committees
+     * After migrating all assets to a new Vault, we still need to refer
+     * back to previous Vault to make sure old withdrawals aren't being reused
+     */
+    function initialize(address incognitoProxyAddress) external {
+        require(!isInitialized);
+        incognito = Incognito(incognitoProxyAddress);
+        expire = now + 3 * 365 days;
+        // init metadata type accepted
+        metadata[170] = true; // custodian withdraw free collateral
+        metadata[171] = true; // custodian liquidated
+        metadata[172] = true; // custodian run away with public token
+        isInitialized = true;
+        notEntered = true;
+    }
+
+    function deposit(string calldata custodianIncAddress) isNotPaused nonReentrant  payable external {
         require(address(this).balance <= 10 ** 27, "max value reached");
 
         emit Deposit(ETH_TOKEN, custodianIncAddress, msg.value);
     }
 
-    function depositERC20(address token, uint amount, string calldata custodianIncAddress) isNotPaused external {
+    function depositERC20(address token, uint amount, string calldata custodianIncAddress) isNotPaused nonReentrant external {
         IERC20 erc20Interface = IERC20(token);
         uint8 decimals = getDecimals(address(token));
         uint tokenBalance = erc20Interface.balanceOf(address(this));
@@ -150,11 +190,10 @@ contract PortalV3 is AdminPausable {
         uint8[] memory sigVs,
         bytes32[] memory sigRs,
         bytes32[] memory sigSs
-    ) isNotPaused public {
+    ) isNotPaused nonReentrant public {
         BurnInstData memory data = parseBurnInst(inst);
         require(metadata[data.meta], "metadata type is not allowed on portalv3"); // Check instruction type
-        // Not withdrawed
-        require(!withdrawed[data.itx], "withdraw transaction already used");
+        require(!withdrawed[data.itx], "withdraw transaction already used"); // Not withdrawed
         withdrawed[data.itx] = true;
 
         verifyInst(
@@ -192,11 +231,12 @@ contract PortalV3 is AdminPausable {
      * @param inst: the full instruction, containing both metadata and body
      */
     function parseBurnInst(bytes memory inst) public pure returns (BurnInstData memory) {
+        require(inst.length >= 3, "Length of instruction must greater than 3");
         BurnInstData memory data;
         data.meta = uint8(inst[0]);
         data.shard = uint8(inst[1]);
         uint8 numOfToken = uint8(inst[2]);
-        require(inst.length == 170 + 64 * numOfToken, "Invalid insturction");
+        require(inst.length == 170 + 64 * numOfToken, "Invalid instruction");
         address[] memory tokens = new address[](numOfToken);
         address payable to;
         uint[] memory amounts = new uint[](numOfToken);
@@ -224,20 +264,10 @@ contract PortalV3 is AdminPausable {
     }
 
     /**
-     * @dev Update delegator address
-     * @param _delegator: delegator address
-     */
-    function updateDelegatorAddress(address _delegator) external onlyAdmin isPaused {
-        delegator = _delegator;
-
-        Delegator(delegator);
-    }
-
-    /**
      * @dev Update incognito proxy address
      * @param _incognitoProxy: incognito proxy address
      */
-    function updateIncognitoAddress(address _incognitoProxy) external onlyAdmin isPaused {
+    function updateIncognitoAddress(address _incognitoProxy) onlyAdmin isPaused external {
         incognito = Incognito(_incognitoProxy);
 
         IncognitoProxy(delegator);
@@ -248,7 +278,7 @@ contract PortalV3 is AdminPausable {
      * @param _meta: meta data type
      * @param _value: meta data value
      */
-    function updateMetaData(uint8 _meta, bool _value) external onlyAdmin {
+    function updateMetaData(uint8 _meta, bool _value) onlyAdmin external {
         metadata[_meta] = _value;
 
         MetaData(_meta, _value);

@@ -291,8 +291,11 @@ func setup(
 	}
 	sim.Commit()
 
+	portalv3ABI, _ := abi.JSON(strings.NewReader(portalv3.Portalv3ABI))
+	input, _ := portalv3ABI.Pack("initialize", p.incAddr)
+
 	// Portal
-	p.delegatorAddr, _, _, err = delegator.DeployDelegator(auth, sim, auth.From, p.portalv3, p.incAddr)
+	p.delegatorAddr, _, _, err = delegator.DeployDelegator(auth, sim, p.portalv3, auth.From, input)
 	if err != nil {
 		return nil, err
 	}
