@@ -202,19 +202,14 @@ func (portalV3Suite *PortalV3BaseTestSuite) depositERC20ToBridge(
 
 	erc20Token, _ := erc20.NewErc20(tokenAddr, portalV3Suite.ETHClient)
 	auth.GasPrice = big.NewInt(50000000000)
-	auth.GasLimit = 1000000
 	tx2, apprErr := erc20Token.Approve(auth, portalV3Suite.Portalv3, amt)
 	tx2Hash := tx2.Hash()
 	fmt.Printf("Approve tx, txHash: %x\n", tx2Hash[:])
 	require.Equal(portalV3Suite.T(), nil, apprErr)
 	time.Sleep(15 * time.Second)
 	auth.GasPrice = big.NewInt(50000000000)
-	auth.GasLimit = 1000000
-
-	fmt.Println("Starting deposit erc20 to portalv3 contract")
 	tx, err := c.DepositERC20(auth, tokenAddr, amt, incPaymentAddrStr)
 	require.Equal(portalV3Suite.T(), nil, err)
-	fmt.Println("Finished deposit erc20 to portlv3 contract")
 	txHash := tx.Hash()
 
 	if err := wait(portalV3Suite.ETHClient, txHash); err != nil {
@@ -225,7 +220,6 @@ func (portalV3Suite *PortalV3BaseTestSuite) depositERC20ToBridge(
 }
 
 func (portalV3Suite *PortalV3BaseTestSuite) callCustodianDeposit(
-	incTokenIDStr string,
 	ethDepositProof []string,
 	ethBlockHash string,
 	ethTxIdx uint,

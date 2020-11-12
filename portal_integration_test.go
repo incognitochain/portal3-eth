@@ -11,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/incognitochain/portal3-eth/portal/delegator"
+	"github.com/incognitochain/portal3-eth/portal/erc20/usdt"
 	"github.com/incognitochain/portal3-eth/portal/incognitoproxy"
 	"github.com/incognitochain/portal3-eth/portal/portalv3"
 	"github.com/stretchr/testify/require"
@@ -35,9 +36,10 @@ type PortalIntegrationTestSuite struct {
 	IncOMGTokenIDStr  string
 	IncSNTTokenIDStr  string
 
+	USDTAddress common.Address
+	DAIAddress  common.Address
+
 	EtherAddressStrKyber string
-	KBNAddressStr        string
-	SALTAddressStr       string
 	OMGAddressStr        string
 	SNTAddressStr        string
 
@@ -73,10 +75,8 @@ func (pg *PortalIntegrationTestSuite) SetupSuite() {
 	pg.IncSALTTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000081"
 	pg.IncOMGTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000072"
 	pg.IncSNTTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000071"
-	pg.KBNAddressStr = "0xad67cB4d63C9da94AcA37fDF2761AaDF780ff4a2"  // kovan
-	pg.SALTAddressStr = "0x6fEE5727EE4CdCBD91f3A873ef2966dF31713A04" // kovan
-	pg.OMGAddressStr = "0xdB7ec4E4784118D9733710e46F7C83fE7889596a"  // kovan
-	pg.SNTAddressStr = "0x4c99B04682fbF9020Fcb31677F8D8d66832d3322"  // kovan
+	pg.OMGAddressStr = "0xdB7ec4E4784118D9733710e46F7C83fE7889596a" // kovan
+	pg.SNTAddressStr = "0x4c99B04682fbF9020Fcb31677F8D8d66832d3322" // kovan
 	pg.DepositingEther = float64(5)
 	pg.ETHPrivKeyStr = "1ABA488300A9D7297A315D127837BE4219107C62C61966ECDF7A75431D75CC61"
 	pg.ETHHost = "http://localhost:8545"
@@ -122,6 +122,11 @@ func (pg *PortalIntegrationTestSuite) SetupSuite() {
 	require.Equal(pg.T(), nil, err)
 	pg.incProxy, err = incognitoproxy.NewIncognitoproxy(incAddr, pg.ETHClient)
 	require.Equal(pg.T(), nil, err)
+
+	// 0x54d28562271De782B261807a01d1D2fb97417912
+	pg.USDTAddress, _, _, err = usdt.DeployUsdt(pg.auth, pg.ETHClient, big.NewInt(100000000000), "Tether", "USDT", big.NewInt(6))
+	require.Equal(pg.T(), nil, err)
+	fmt.Printf("usdt address: %s\n", pg.USDTAddress.Hex())
 
 	//get portalv3 ip
 	ipAddress, err := exec.Command("/bin/sh", "-c", "docker inspect -f \"{{ .NetworkSettings.IPAddress }}\" portalv3").Output()
@@ -195,7 +200,6 @@ func (pg *PortalIntegrationTestSuite) Test1CustodianDeposit() {
 
 	// Submit proof first time must pass
 	depositRes, err := pg.callCustodianDeposit(
-		pg.IncEtherTokenIDStr,
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
@@ -217,7 +221,60 @@ func (pg *PortalIntegrationTestSuite) Test1CustodianDeposit() {
 
 	// Submit the same as above proof must failed
 	depositRes, err = pg.callCustodianDeposit(
-		pg.IncEtherTokenIDStr,
+		ethDepositProof,
+		ethBlockHash,
+		ethTxIdx,
+	)
+	require.Equal(pg.T(), nil, err)
+	require.NotEqual(pg.T(), nil, depositRes)
+	TxId = depositRes["TxID"]
+	for {
+		time.Sleep(5 * time.Second)
+		TxDepositStatus, err := getPortalCustodianDepositStatusv3(pg.IncRPCHost, TxId.(string))
+		if TxDepositStatus != nil || err != nil {
+			require.Equal(pg.T(), float64(2), TxDepositStatus["Status"].(float64))
+			break
+		}
+	}
+
+	// Deposit ERC20
+	fmt.Println("------------ STEP 2: Custodian deposit USDT --------------")
+	txHash = pg.depositERC20ToBridge(
+		big.NewInt(10*1e6), // 10 usdt
+		pg.USDTAddress,
+		pg.IncPaymentAddrStr,
+	)
+
+	_, ethBlockHash, ethTxIdx, ethDepositProof, err = getETHDepositProof(pg.ETHHost, txHash)
+	require.Equal(pg.T(), nil, err)
+	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
+
+	fmt.Println("Generate blocks to pass 15 confirmations ")
+	pg.genBlock()
+
+	// Submit proof first time must pass
+	depositRes, err = pg.callCustodianDeposit(
+		ethDepositProof,
+		ethBlockHash,
+		ethTxIdx,
+	)
+	require.Equal(pg.T(), nil, err)
+	require.NotEqual(pg.T(), nil, depositRes)
+	TxId = depositRes["TxID"]
+
+	for {
+		time.Sleep(5 * time.Second)
+		TxDepositStatus, err := getPortalCustodianDepositStatusv3(pg.IncRPCHost, TxId.(string))
+		if TxDepositStatus != nil || err != nil {
+			require.Equal(pg.T(), float64(1), TxDepositStatus["Status"].(float64))
+			require.Equal(pg.T(), 1e7, TxDepositStatus["DepositAmount"].(float64))
+			require.Equal(pg.T(), pg.USDTAddress.String()[2:], TxDepositStatus["ExternalTokenID"].(string))
+			break
+		}
+	}
+
+	// Submit the same as above proof must failed
+	depositRes, err = pg.callCustodianDeposit(
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
@@ -286,6 +343,69 @@ func (pg *PortalIntegrationTestSuite) Test2CustodianWithdraw() {
 		pg.ETHOwnerAddrStr,
 		pg.EtherAddressStr,
 		big.NewInt(int64(pg.DepositingEther*params.Ether)).String(),
+	)
+	require.Equal(pg.T(), nil, err)
+	require.NotEqual(pg.T(), nil, withdrawRes)
+
+	TxId = withdrawRes["TxID"]
+	for {
+		time.Sleep(5 * time.Second)
+		TxWithdrawStatus, err := getPortalCustodianWithdrawV3(pg.IncRPCHost, TxId.(string), "getcustodianwithdrawrequeststatusv3")
+		if TxWithdrawStatus != nil || err != nil {
+			require.Equal(pg.T(), nil, err)
+			require.Equal(pg.T(), float64(2), TxWithdrawStatus["Status"].(float64))
+			break
+		}
+	}
+
+	fmt.Println("------------ STEP 2: Custodian Withdraw pUSDT --------------")
+
+	// Custodian Create withdraw request
+	withdrawRes, err = pg.callCustodianWithdraw(
+		pg.IncPrivKeyStr,
+		pg.IncPaymentAddrStr,
+		pg.ETHOwnerAddrStr,
+		pg.USDTAddress.String()[2:],
+		big.NewInt(int64(5*1e6)).String(),
+	)
+	require.Equal(pg.T(), nil, err)
+	require.NotEqual(pg.T(), nil, withdrawRes)
+
+	TxId = withdrawRes["TxID"]
+	for {
+		time.Sleep(5 * time.Second)
+		TxWithdrawStatus, err := getPortalCustodianWithdrawV3(pg.IncRPCHost, TxId.(string), "getcustodianwithdrawrequeststatusv3")
+		if TxWithdrawStatus != nil || err != nil {
+			require.Equal(pg.T(), nil, err)
+			require.Equal(pg.T(), float64(1), TxWithdrawStatus["Status"].(float64))
+			break
+		}
+	}
+	time.Sleep(10 * time.Second)
+
+	// submit to portal contract
+	withdrawProof, err = getAndDecodeProofV3(pg.IncRPCHost, TxId.(string), "getportalwithdrawcollateralproof", 170)
+	require.Equal(pg.T(), nil, err)
+	usdtInstance, _ := usdt.NewUsdt(pg.USDTAddress, pg.ETHClient)
+	balanceBefore, err = usdtInstance.BalanceOf(nil, common.HexToAddress(pg.ETHOwnerAddrStr))
+	require.Equal(pg.T(), nil, err)
+	_, err = Withdraw(pg.portalV3Inst, pg.auth, withdrawProof)
+	require.Equal(pg.T(), nil, err)
+	balanceAfter, err = usdtInstance.BalanceOf(nil, common.HexToAddress(pg.ETHOwnerAddrStr))
+	require.Equal(pg.T(), nil, err)
+	require.Equal(pg.T(), 0, big.NewInt(0).Sub(balanceAfter, balanceBefore).Cmp(big.NewInt(int64(5*1e6))))
+
+	// resubmit proof
+	_, err = Withdraw(pg.portalV3Inst, pg.auth, withdrawProof)
+	require.NotEqual(pg.T(), nil, err)
+
+	// burn amount greater than available must be fail
+	withdrawRes, err = pg.callCustodianWithdraw(
+		pg.IncPrivKeyStr,
+		pg.IncPaymentAddrStr,
+		pg.ETHOwnerAddrStr,
+		pg.USDTAddress.String()[2:],
+		big.NewInt(int64(6*1e6)).String(),
 	)
 	require.Equal(pg.T(), nil, err)
 	require.NotEqual(pg.T(), nil, withdrawRes)
