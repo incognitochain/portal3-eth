@@ -108,8 +108,8 @@ func (portalV3Suite *PortalV3BaseTestSuite) SetupSuite() {
 	portalV3Suite.ETHOwnerAddrStr = "FD94c46ab8dCF0928d5113a6fEaa925793504e16"
 
 	portalV3Suite.ETHHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
-	portalV3Suite.IncBridgeHost = "http://127.0.0.1:9338"
-	portalV3Suite.IncRPCHost = "http://127.0.0.1:9334"
+	portalV3Suite.IncBridgeHost = "http://51.79.76.38:8334"
+	portalV3Suite.IncRPCHost = "http://51.79.76.38:8334"
 
 	portalV3Suite.Portalv3 = common.HexToAddress("0x88D9531eCCDee7fDd2061D2053F92B1E00596804")
 

@@ -3,7 +3,7 @@ FROM golang:1.15
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y git supervisor 
 RUN git clone --depth 1 --branch portalv3 https://github.com/incognitochain/incognito-chain
-RUN git clone --depth 1 --branch v3-multi https://github.com/incognitochain/incognito-highway && \
+RUN git clone --depth 1 --branch testnet_bcfn_libp2p_20201018_02 https://github.com/incognitochain/incognito-highway && \
     cd incognito-highway && \
     go build -o highway
 COPY supervisord.conf supervisord.conf
