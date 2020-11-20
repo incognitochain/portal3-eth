@@ -28,6 +28,7 @@ type PortalParams struct {
 	MinPercentPortingFee                 float64
 	MinPercentRedeemFee                  float64
 	SupportedCollateralTokens            []PortalCollateral
+	MinPortalFee                         uint64 // nano PRV
 }
 
 /*
@@ -141,10 +142,31 @@ func initPortalTokensForMainNet() map[string]PortalTokenProcessor {
 }
 
 // external tokenID there is no 0x prefix
-func getSupportedPortalCollaterals() []PortalCollateral {
+// @@Note: need to update before deploying
+func getSupportedPortalCollateralsMainnet() []PortalCollateral {
+	return []PortalCollateral{
+		{"0000000000000000000000000000000000000000", 9}, // eth
+		{"dac17f958d2ee523a2206206994597c13d831ec7", 6}, // usdt
+		{"a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", 6}, // usdc
+	}
+}
+
+// external tokenID there is no 0x prefix
+// @@Note: need to update before deploying
+func getSupportedPortalCollateralsTestnet() []PortalCollateral {
+	return []PortalCollateral{
+		{"0000000000000000000000000000000000000000", 9}, // eth
+		{"54d28562271De782B261807a01d1D2fb97417912", 6}, // usdt,
+	}
+}
+
+// external tokenID there is no 0x prefix
+// @@Note: need to update before deploying
+func getSupportedPortalCollateralsTestnet2() []PortalCollateral {
 	return []PortalCollateral{
 		{"0000000000000000000000000000000000000000", 9},
-		{"USDT", 6},
+		{"64fbdbc6bf5b228814b58706d91ed03777f0edf6", 6}, // usdt
+		{"7079f3762805cff9c979a5bdc6f5648bcfee76c8", 6}, // usdc
 	}
 }
 
@@ -191,7 +213,7 @@ func init() {
 		EthContractAddressStr:            TestnetETHContractAddressStr,
 		IncognitoDAOAddress:              TestnetIncognitoDAOAddress,
 		CentralizedWebsitePaymentAddress: TestnetCentralizedWebsitePaymentAddress,
-		SlashLevels:                      []SlashLevel{
+		SlashLevels: []SlashLevel{
 			//SlashLevel{MinRange: 20, PunishedEpoches: 1},
 			//SlashLevel{MinRange: 50, PunishedEpoches: 2},
 			//SlashLevel{MinRange: 75, PunishedEpoches: 3},
@@ -209,19 +231,20 @@ func init() {
 		PortalFeederAddress:            TestnetPortalFeeder,
 		PortalParams: map[uint64]PortalParams{
 			0: {
-				TimeOutCustodianReturnPubToken:       5 * time.Minute,
-				TimeOutWaitingPortingRequest:         5 * time.Minute,
-				TimeOutWaitingRedeemRequest:          5 * time.Minute,
+				TimeOutCustodianReturnPubToken:       15 * time.Minute,
+				TimeOutWaitingPortingRequest:         15 * time.Minute,
+				TimeOutWaitingRedeemRequest:          10 * time.Minute,
 				MaxPercentLiquidatedCollateralAmount: 105,
 				MaxPercentCustodianRewards:           10, // todo: need to be updated before deploying
 				MinPercentCustodianRewards:           1,
-				MinLockCollateralAmountInEpoch:       5000 * 1e9, // 5000 prv
+				MinLockCollateralAmountInEpoch:       10000 * 1e6, // 10000 usd
 				MinPercentLockedCollateral:           150,
 				TP120:                                120,
 				TP130:                                130,
 				MinPercentPortingFee:                 0.01,
 				MinPercentRedeemFee:                  0.01,
-				SupportedCollateralTokens:            getSupportedPortalCollaterals(),
+				SupportedCollateralTokens:            getSupportedPortalCollateralsTestnet(), // todo: need to be updated before deploying
+				MinPortalFee:                         100,
 			},
 		},
 		PortalTokens:                initPortalTokensForTestNet(),
@@ -232,7 +255,7 @@ func init() {
 		BCHeightBreakPointNewZKP:    2300000, //TODO: change this value when deployed testnet
 		ETHRemoveBridgeSigEpoch:     21920,
 		PortalETHContractAddressStr: "0x8c13AFB7815f10A8333955854E6ec7503eD841B7", // todo: update sc address
-		RedeemPortalV3Epoch:         40,
+		RedeemPortalV3Epoch:         1,
 	}
 	// END TESTNET
 
@@ -278,7 +301,7 @@ func init() {
 		EthContractAddressStr:            Testnet2ETHContractAddressStr,
 		IncognitoDAOAddress:              Testnet2IncognitoDAOAddress,
 		CentralizedWebsitePaymentAddress: Testnet2CentralizedWebsitePaymentAddress,
-		SlashLevels:                      []SlashLevel{
+		SlashLevels: []SlashLevel{
 			//SlashLevel{MinRange: 20, PunishedEpoches: 1},
 			//SlashLevel{MinRange: 50, PunishedEpoches: 2},
 			//SlashLevel{MinRange: 75, PunishedEpoches: 3},
@@ -308,7 +331,8 @@ func init() {
 				TP130:                                130,
 				MinPercentPortingFee:                 0.01,
 				MinPercentRedeemFee:                  0.01,
-				SupportedCollateralTokens:            getSupportedPortalCollaterals(),
+				SupportedCollateralTokens:            getSupportedPortalCollateralsTestnet2(),
+				MinPortalFee:                         100,
 			},
 		},
 		PortalTokens:                initPortalTokensForTestNet(),
@@ -363,7 +387,7 @@ func init() {
 		EthContractAddressStr:            MainETHContractAddressStr,
 		IncognitoDAOAddress:              MainnetIncognitoDAOAddress,
 		CentralizedWebsitePaymentAddress: MainnetCentralizedWebsitePaymentAddress,
-		SlashLevels:                      []SlashLevel{
+		SlashLevels: []SlashLevel{
 			//SlashLevel{MinRange: 20, PunishedEpoches: 1},
 			//SlashLevel{MinRange: 50, PunishedEpoches: 2},
 			//SlashLevel{MinRange: 75, PunishedEpoches: 3},
@@ -393,7 +417,8 @@ func init() {
 				TP130:                                130,
 				MinPercentPortingFee:                 0.01,
 				MinPercentRedeemFee:                  0.01,
-				SupportedCollateralTokens:            getSupportedPortalCollaterals(),
+				SupportedCollateralTokens:            getSupportedPortalCollateralsMainnet(),
+				MinPortalFee:                         100,
 			},
 		},
 		PortalTokens:                initPortalTokensForMainNet(),

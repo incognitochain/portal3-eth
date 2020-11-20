@@ -236,7 +236,7 @@ contract PortalV3 is AdminPausable {
         data.meta = uint8(inst[0]);
         data.shard = uint8(inst[1]);
         uint8 numOfToken = uint8(inst[2]);
-        require(inst.length == 170 + 64 * numOfToken, "Invalid instruction");
+        require(inst.length == 170 + 64 * uint16(numOfToken), "Invalid instruction");
         address[] memory tokens = new address[](numOfToken);
         address payable to;
         uint[] memory amounts = new uint[](numOfToken);
