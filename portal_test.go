@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/incognitochain/portal3-eth/portal/delegator"
 	"github.com/incognitochain/portal3-eth/portal/incognitoproxy"
 	"github.com/stretchr/testify/require"
 	"math/big"
@@ -137,11 +138,11 @@ func (v3 *PortalV3TestSuite) TestPortalV3LockCustodianTokens() {
 
 func (v3 *PortalV3TestSuite) TestPortalV3LockCustodianTokensWhenPortalPaused() {
 	fmt.Println("==== PORTAL 3 TEST CUSTODIAN DEPOSIT WHILE PORTAL PAUSED ====")
-	_, err := v3.p.portalV3Ins.Pause(auth)
+	portalStorage, err := delegator.NewDelegator(v3.p.delegatorAddr, v3.p.sim)
+	require.Equal(v3.T(), nil, err)
+	_, err = portalStorage.Pause(auth2)
 	require.Equal(v3.T(), nil, err)
 	v3.p.sim.Commit()
-	isPaused, _ := v3.p.portalV3Ins.Paused(nil)
-	require.Equal(v3.T(), true, isPaused)
 
 	// Deposit ETH
 	_, _, err = deposit(v3.p, big.NewInt(int64(5e18)))
@@ -378,11 +379,10 @@ func (v3 *PortalV3TestSuite) TestPortalV3UnLockCustodianTokensWhilePaused() {
 		})
 	}
 
-	_, err := v3.p.portalV3Ins.Pause(auth)
+	portalStorage, err := delegator.NewDelegator(v3.p.delegatorAddr, v3.p.sim)
 	require.Equal(v3.T(), nil, err)
+	_, err = portalStorage.Pause(auth2)
 	v3.p.sim.Commit()
-	isPaused, _ := v3.p.portalV3Ins.Paused(nil)
-	require.Equal(v3.T(), true, isPaused)
 
 	for _, tc := range testCases {
 		v3.T().Run(tc.desc, func(t *testing.T) {

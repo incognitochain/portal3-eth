@@ -37,8 +37,13 @@ import (
 
 // // Define the suite, and absorb the built-in basic suite
 // // functionality from testify - including assertion methods.
+// user
 var auth *bind.TransactOpts
 var genesisAcc *account
+
+// admin
+var auth2 *bind.TransactOpts
+var genesisAcc2 *account
 
 const (
 	DepositERC20Topic = "0x2d4b597935f3cd67fb2eebf1db4debc934cee5c7baa7153f980fdbeb2e74084e"
@@ -144,6 +149,8 @@ func init() {
 	fmt.Println("Initializing genesis account...")
 	genesisAcc = loadAccount()
 	auth = bind.NewKeyedTransactor(genesisAcc.PrivateKey)
+	genesisAcc2 = loadAccount()
+	auth2 = bind.NewKeyedTransactor(genesisAcc2.PrivateKey)
 }
 
 func loadAccount() *account {
@@ -247,6 +254,7 @@ func setup(
 	alloc := make(core.GenesisAlloc)
 	balance, _ := big.NewInt(1).SetString("1000000000000000000000000000000", 10) // 1E30 wei
 	alloc[auth.From] = core.GenesisAccount{Balance: balance}
+	alloc[auth2.From] = core.GenesisAccount{Balance: balance}
 	for _, acc := range accs {
 		alloc[acc] = core.GenesisAccount{Balance: balance}
 	}
@@ -278,7 +286,7 @@ func setup(
 	}
 
 	// IncognitoProxy
-	admin := auth.From
+	admin := auth2.From
 	p.incAddr, tx, p.inc, err = incognitoproxy.DeployIncognitoproxy(auth, sim, admin, beaconComm)
 	if err != nil {
 		return nil, fmt.Errorf("failed to deploy IncognitoProxy contract: %v", err)
@@ -292,10 +300,10 @@ func setup(
 	sim.Commit()
 
 	portalv3ABI, _ := abi.JSON(strings.NewReader(portalv3.Portalv3ABI))
-	input, _ := portalv3ABI.Pack("initialize", p.incAddr)
+	input, _ := portalv3ABI.Pack("initialize")
 
 	// Portal
-	p.delegatorAddr, _, _, err = delegator.DeployDelegator(auth, sim, p.portalv3, auth.From, input)
+	p.delegatorAddr, _, _, err = delegator.DeployDelegator(auth, sim, p.portalv3, admin, p.incAddr, input)
 	if err != nil {
 		return nil, err
 	}

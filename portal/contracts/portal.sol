@@ -2,7 +2,6 @@ pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./IERC20.sol";
-import "./pause.sol";
 
 /**
  * Math operations with safety checks
@@ -28,7 +27,7 @@ library SafeMath {
 
     function safeAdd(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a + b;
-        require(c>=a && c>=b);
+        require(c >= a && c >= b);
         return c;
     }
 }
@@ -54,15 +53,17 @@ interface Incognito {
     ) external view returns (bool);
 }
 
-contract PortalV3 is AdminPausable {
+contract PortalV3 {
 
     using SafeMath for uint;
+    /**
+     * @dev Storage slot with the incognito proxy.
+     * This is the keccak-256 hash of "eip1967.proxy.incognito." subtracted by 1
+     */
+    bytes32 private constant _INCOGNITO_SLOT = 0x62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd2;
     address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
-    address public delegator;
-    Incognito public incognito;
     bool notEntered = true;
     bool isInitialized = false;
-    mapping(uint8 => bool) public metadata;
     mapping(bytes32 => bool) public withdrawed;
     struct BurnInstData {
         uint8 meta; // type of the instruction
@@ -77,7 +78,6 @@ contract PortalV3 is AdminPausable {
     event Withdraw(address[] token, address to, uint[] amount);
     event Delegator(address);
     event IncognitoProxy(address);
-    event MetaData(uint8, bool);
 
     /**
      * @dev Prevents a contract from calling itself, directly or indirectly.
@@ -101,30 +101,33 @@ contract PortalV3 is AdminPausable {
     }
 
     /**
-     * @dev Creates new Vault to hold assets for Incognito Chain
-     * @param incognitoProxyAddress: contract containing Incognito's committees
-     * After migrating all assets to a new Vault, we still need to refer
-     * back to previous Vault to make sure old withdrawals aren't being reused
+     * @dev Returns the current incognito proxy.
      */
-    function initialize(address incognitoProxyAddress) external {
+    function _incognito() internal view returns (address icg) {
+        bytes32 slot = _INCOGNITO_SLOT;
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            icg := sload(slot)
+        }
+    }
+
+    /**
+     * @dev initialize pre-params for portalv3
+     */
+    function initialize() external {
         require(!isInitialized);
-        incognito = Incognito(incognitoProxyAddress);
-        expire = now + 3 * 365 days;
         // init metadata type accepted
-        metadata[170] = true; // custodian withdraw free collateral
-        metadata[171] = true; // custodian liquidated
-        metadata[172] = true; // custodian run away with public token
         isInitialized = true;
         notEntered = true;
     }
 
-    function deposit(string calldata custodianIncAddress) isNotPaused nonReentrant  payable external {
+    function deposit(string calldata custodianIncAddress) nonReentrant payable external {
         require(address(this).balance <= 10 ** 27, "max value reached");
 
         emit Deposit(ETH_TOKEN, custodianIncAddress, msg.value);
     }
 
-    function depositERC20(address token, uint amount, string calldata custodianIncAddress) isNotPaused nonReentrant external {
+    function depositERC20(address token, uint amount, string calldata custodianIncAddress) nonReentrant external {
         IERC20 erc20Interface = IERC20(token);
         uint8 decimals = getDecimals(address(token));
         uint tokenBalance = erc20Interface.balanceOf(address(this));
@@ -164,7 +167,7 @@ contract PortalV3 is AdminPausable {
         bytes32 beaconInstHash = keccak256(abi.encodePacked(inst, heights));
 
         // Verify instruction on beacon
-        require(incognito.instructionApproved(
+        require(Incognito(_incognito()).instructionApproved(
                 true, // Only check instruction on beacon
                 beaconInstHash,
                 heights,
@@ -179,6 +182,9 @@ contract PortalV3 is AdminPausable {
             ), "invalid instruction data");
     }
 
+    /**
+     * @dev Unlock collaterals for custodian and user
+     */
     function withdrawLockedTokens(
         bytes memory inst,
         uint heights,
@@ -190,9 +196,13 @@ contract PortalV3 is AdminPausable {
         uint8[] memory sigVs,
         bytes32[] memory sigRs,
         bytes32[] memory sigSs
-    ) isNotPaused nonReentrant public {
+    ) nonReentrant public {
         BurnInstData memory data = parseBurnInst(inst);
-        require(metadata[data.meta], "metadata type is not allowed on portalv3"); // Check instruction type
+        // Check instruction type
+        // 170 custodian withdraw free collateral
+        // 171 custodian liquidated
+        // 172 custodian run away with public token
+        require(data.meta == 170 || data.meta == 171 || data.meta == 172, "metadata type is not allowed on portalv3");
         require(!withdrawed[data.itx], "withdraw transaction already used"); // Not withdrawed
         withdrawed[data.itx] = true;
 
@@ -219,7 +229,7 @@ contract PortalV3 is AdminPausable {
                 IERC20(data.tokens[i]).transfer(data.to, data.amounts[i]);
                 require(checkSuccess(), "internal transaction error");
             } else {
-                (bool success, ) =  data.to.call{value: data.amounts[i]}("");
+                (bool success,) = data.to.call{value : data.amounts[i]}("");
                 require(success, "internal transaction error");
             }
         }
@@ -242,7 +252,7 @@ contract PortalV3 is AdminPausable {
         uint[] memory amounts = new uint[](numOfToken);
         bytes32 itx;
         assembly {
-        //skip first 0x20 bytes (stored length of inst)
+        // skip first 0x20 bytes (stored length of inst)
         // skip the next 0x6A bytes (stored incognito address)
             to := mload(add(inst, 0x8A)) // [138:170]
             itx := mload(add(inst, add(0xAA, mul(0x40, numOfToken)))) // [170+64*x:]
@@ -251,8 +261,8 @@ contract PortalV3 is AdminPausable {
         // load tokens and amounts into array
         for (uint8 i = 1; i <= numOfToken; i++) {
             assembly {
-                mstore(add(tokens, mul(0x20,i)), mload(add(inst, add(0x6A, mul(i, 0x40)))))
-                mstore(add(amounts, mul(0x20,i)), mload(add(inst, add(0x8A, mul(i, 0x40)))))
+                mstore(add(tokens, mul(0x20, i)), mload(add(inst, add(0x6A, mul(i, 0x40)))))
+                mstore(add(amounts, mul(0x20, i)), mload(add(inst, add(0x8A, mul(i, 0x40)))))
             }
         }
 
@@ -264,25 +274,9 @@ contract PortalV3 is AdminPausable {
     }
 
     /**
-     * @dev Update incognito proxy address
-     * @param _incognitoProxy: incognito proxy address
+     * @dev Payable receive function to receive Ether from oldVault when migrating
      */
-    function updateIncognitoAddress(address _incognitoProxy) onlyAdmin isPaused external {
-        incognito = Incognito(_incognitoProxy);
-
-        IncognitoProxy(delegator);
-    }
-
-    /**
-     * @dev Update meta data type
-     * @param _meta: meta data type
-     * @param _value: meta data value
-     */
-    function updateMetaData(uint8 _meta, bool _value) onlyAdmin external {
-        metadata[_meta] = _value;
-
-        MetaData(_meta, _value);
-    }
+    receive() external payable {}
 
     /**
     * @dev Check if transfer() and transferFrom() of ERC20 succeeded or not
@@ -310,7 +304,7 @@ contract PortalV3 is AdminPausable {
             }
 
             // not sure what was returned: don't mark as success
-            default { }
+            default {}
         }
         return returnValue != 0;
     }

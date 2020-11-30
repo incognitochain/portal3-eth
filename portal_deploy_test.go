@@ -123,13 +123,13 @@ func (portalv3DeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	require.Equal(portalv3DeploySuite.T(), nil, err)
 
 	portalv3ABI, _ := abi.JSON(strings.NewReader(portalv3.Portalv3ABI))
-	input, _ := portalv3ABI.Pack("initialize", incAddr)
+	input, _ := portalv3ABI.Pack("initialize")
 
-	delegator, tx, _, err := delegator.DeployDelegator(auth, portalv3DeploySuite.ETHClient, portalv3Addr, admin, input)
+	delegatorAddr, tx, _, err := delegator.DeployDelegator(auth, portalv3DeploySuite.ETHClient, portalv3Addr, admin, incAddr, input)
 	require.Equal(portalv3DeploySuite.T(), nil, err)
 	// incAddr := common.HexToAddress(IncognitoProxyAddress)
 	fmt.Println("deployed delegator")
-	fmt.Printf("addr: %s\n", delegator.Hex())
+	fmt.Printf("addr: %s\n", delegatorAddr.Hex())
 
 	// Wait until tx is confirmed
 	err = wait(portalv3DeploySuite.ETHClient, tx.Hash())

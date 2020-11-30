@@ -40,6 +40,7 @@ type PortalIntegrationTestSuite struct {
 	DAIAddress  common.Address
 
 	EtherAddressStrKyber string
+	PortalAdminKey       string
 	OMGAddressStr        string
 	SNTAddressStr        string
 
@@ -79,6 +80,7 @@ func (pg *PortalIntegrationTestSuite) SetupSuite() {
 	pg.SNTAddressStr = "0x4c99B04682fbF9020Fcb31677F8D8d66832d3322" // kovan
 	pg.DepositingEther = float64(5)
 	pg.ETHPrivKeyStr = "1ABA488300A9D7297A315D127837BE4219107C62C61966ECDF7A75431D75CC61"
+	pg.PortalAdminKey = "B8DB29A7A43FB88AD520F762C5FDF6F1B0155637FA1E5CB2C796AFE9E5C04E31"
 	pg.ETHHost = "http://localhost:8545"
 
 	var err error
@@ -86,7 +88,7 @@ func (pg *PortalIntegrationTestSuite) SetupSuite() {
 	// remove container if already running
 	exec.Command("/bin/sh", "-c", "docker rm -f portalv3").Output()
 	exec.Command("/bin/sh", "-c", "docker rm -f incognito").Output()
-	_, err = exec.Command("/bin/sh", "-c", "docker run -d -p 8545:8545 --name portalv3 trufflesuite/ganache-cli --account=\"0x1ABA488300A9D7297A315D127837BE4219107C62C61966ECDF7A75431D75CC61,10000000000000000000000000000000000\"").Output()
+	_, err = exec.Command("/bin/sh", "-c", "docker run -d -p 8545:8545 --name portalv3 trufflesuite/ganache-cli --account=\"0x1ABA488300A9D7297A315D127837BE4219107C62C61966ECDF7A75431D75CC61,10000000000000000000000000000000000,0xB8DB29A7A43FB88AD520F762C5FDF6F1B0155637FA1E5CB2C796AFE9E5C04E31,10000000000000000000000000000000000\"").Output()
 	require.Equal(pg.T(), nil, err)
 	time.Sleep(10 * time.Second)
 
@@ -96,6 +98,11 @@ func (pg *PortalIntegrationTestSuite) SetupSuite() {
 	pg.ETHPrivKey = ETHPrivKey
 	pg.auth = bind.NewKeyedTransactor(ETHPrivKey)
 
+	// admin key
+	privKey, err := crypto.HexToECDSA(pg.PortalAdminKey)
+	require.Equal(pg.T(), nil, err)
+	admin := bind.NewKeyedTransactor(privKey)
+
 	//pg.Portalv3 = common.HexToAddress("0x8c13AFB7815f10A8333955854E6ec7503eD841B7")
 	//pg.portalV3Inst, err = portalv3.NewPortalv3(pg.Portalv3, pg.ETHClient)
 	//require.Equal(pg.T(), nil, err)
@@ -104,7 +111,7 @@ func (pg *PortalIntegrationTestSuite) SetupSuite() {
 	//require.Equal(pg.T(), nil, err)
 
 	c := getFixedCommittee()
-	incAddr, _, _, err := incognitoproxy.DeployIncognitoproxy(pg.auth, pg.ETHClient, pg.auth.From, c.beacons)
+	incAddr, _, _, err := incognitoproxy.DeployIncognitoproxy(pg.auth, pg.ETHClient, admin.From, c.beacons)
 	require.Equal(pg.T(), nil, err)
 	fmt.Printf("Proxy address: %s\n", incAddr.Hex())
 	portalv3Logic, _, _, err := portalv3.DeployPortalv3(pg.auth, pg.ETHClient)
@@ -112,10 +119,10 @@ func (pg *PortalIntegrationTestSuite) SetupSuite() {
 	fmt.Printf("portalv3 address: %s\n", portalv3Logic.Hex())
 
 	portalv3ABI, _ := abi.JSON(strings.NewReader(portalv3.Portalv3ABI))
-	input, _ := portalv3ABI.Pack("initialize", incAddr)
+	input, _ := portalv3ABI.Pack("initialize")
 
 	//PortalV3
-	pg.Portalv3, _, _, err = delegator.DeployDelegator(pg.auth, pg.ETHClient, portalv3Logic, pg.auth.From, input)
+	pg.Portalv3, _, _, err = delegator.DeployDelegator(pg.auth, pg.ETHClient, portalv3Logic, admin.From, incAddr, input)
 	require.Equal(pg.T(), nil, err)
 	fmt.Printf("delegator address: %s\n", pg.Portalv3.Hex())
 	pg.portalV3Inst, err = portalv3.NewPortalv3(pg.Portalv3, pg.ETHClient)
