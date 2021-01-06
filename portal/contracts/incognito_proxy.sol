@@ -76,6 +76,7 @@ contract IncognitoProxy is AdminPausable {
 
         // Verify instruction on beacon
         require(instructionApproved(
+            true,
             instHash,
             beaconCommittees[beaconCommittees.length-1].startBlock,
             instPath,
@@ -122,6 +123,7 @@ contract IncognitoProxy is AdminPausable {
      * @return bool: whether the instruction is valid and confirmed
      */
     function instructionApproved(
+        bool isBeacon,
         bytes32 instHash,
         uint blkHeight,
         bytes32[] memory instPath,

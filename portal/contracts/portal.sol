@@ -2,35 +2,34 @@ pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./IERC20.sol";
-import "./pause.sol";
 
 /**
  * Math operations with safety checks
  */
 library SafeMath {
-  function safeMul(uint256 a, uint256 b) internal pure returns (uint256) {
-    uint256 c = a * b;
-    require(a == 0 || c / a == b);
-    return c;
-  }
+    function safeMul(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 c = a * b;
+        require(a == 0 || c / a == b);
+        return c;
+    }
 
-  function safeDiv(uint256 a, uint256 b) internal pure returns (uint256) {
-    require(b > 0);
-    uint256 c = a / b;
-    require(a == b * c + a % b);
-    return c;
-  }
+    function safeDiv(uint256 a, uint256 b) internal pure returns (uint256) {
+        require(b > 0);
+        uint256 c = a / b;
+        require(a == b * c + a % b);
+        return c;
+    }
 
-  function safeSub(uint256 a, uint256 b) internal pure returns (uint256) {
-    require(b <= a);
-    return a - b;
-  }
+    function safeSub(uint256 a, uint256 b) internal pure returns (uint256) {
+        require(b <= a);
+        return a - b;
+    }
 
-  function safeAdd(uint256 a, uint256 b) internal pure returns (uint256) {
-    uint256 c = a + b;
-    require(c>=a && c>=b);
-    return c;
-  }
+    function safeAdd(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 c = a + b;
+        require(c >= a && c >= b);
+        return c;
+    }
 }
 
 
@@ -54,25 +53,29 @@ interface Incognito {
     ) external view returns (bool);
 }
 
-contract PortalV3 is AdminPausable {
-    address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
-    address public delegator;
+contract PortalV3 {
 
-    Incognito incognito;
     using SafeMath for uint;
+    /**
+     * @dev Storage slot with the incognito proxy.
+     * This is the keccak-256 hash of "eip1967.proxy.incognito." subtracted by 1
+     */
+    bytes32 private constant _INCOGNITO_SLOT = 0x62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd2;
+    address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
+    bool notEntered = true;
+    bool isInitialized = false;
     mapping(bytes32 => bool) public withdrawed;
     struct BurnInstData {
         uint8 meta; // type of the instruction
         uint8 shard; // ID of the Incognito shard containing the instruction, must be 1
-        address token; // ETH address of the token contract (0x0 for ETH)
+        address[] tokens; // ETH address of the tokens contract (0x0 for ETH)
         address payable to; // ETH address of the receiver of the token
-        uint amount; // burned amount (on Incognito)
+        uint[] amounts; // burned amounts (on Incognito)
         bytes32 itx; // Incognito's burning tx
     }
-    bool notEntered = true;
 
     event Deposit(address tokenID, string custodianIncAddress, uint amount);
-    event Withdraw(address token, address to, uint amount);
+    event Withdraw(address[] token, address to, uint[] amount);
     event Delegator(address);
     event IncognitoProxy(address);
 
@@ -85,7 +88,7 @@ contract PortalV3 is AdminPausable {
      */
     modifier nonReentrant() {
         // On the first call to nonReentrant, notEntered will be true
-        require(notEntered, "can not reentrant");
+        require(notEntered, "can not reentrant to vault");
 
         // Any calls to nonReentrant after this point will fail
         notEntered = false;
@@ -97,13 +100,34 @@ contract PortalV3 is AdminPausable {
         notEntered = true;
     }
 
-    function deposit(string calldata custodianIncAddress) isNotPaused nonReentrant payable external {
+    /**
+     * @dev Returns the current incognito proxy.
+     */
+    function _incognito() internal view returns (address icg) {
+        bytes32 slot = _INCOGNITO_SLOT;
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            icg := sload(slot)
+        }
+    }
+
+    /**
+     * @dev initialize pre-params for portalv3
+     */
+    function initialize() external {
+        require(!isInitialized);
+        // init metadata type accepted
+        isInitialized = true;
+        notEntered = true;
+    }
+
+    function deposit(string calldata custodianIncAddress) nonReentrant payable external {
         require(address(this).balance <= 10 ** 27, "max value reached");
 
         emit Deposit(ETH_TOKEN, custodianIncAddress, msg.value);
     }
 
-    function depositERC20(address token, uint amount, string calldata custodianIncAddress) isNotPaused nonReentrant external {
+    function depositERC20(address token, uint amount, string calldata custodianIncAddress) nonReentrant external {
         IERC20 erc20Interface = IERC20(token);
         uint8 decimals = getDecimals(address(token));
         uint tokenBalance = erc20Interface.balanceOf(address(this));
@@ -143,21 +167,24 @@ contract PortalV3 is AdminPausable {
         bytes32 beaconInstHash = keccak256(abi.encodePacked(inst, heights));
 
         // Verify instruction on beacon
-        require(incognito.instructionApproved(
-            true, // Only check instruction on beacon
-            beaconInstHash,
-            heights,
-            instPaths,
-            instPathIsLefts,
-            instRoots,
-            blkData,
-            sigIdxs,
-            sigVs,
-            sigRs,
-            sigSs
-        ), "invalid instruction data");
+        require(Incognito(_incognito()).instructionApproved(
+                true, // Only check instruction on beacon
+                beaconInstHash,
+                heights,
+                instPaths,
+                instPathIsLefts,
+                instRoots,
+                blkData,
+                sigIdxs,
+                sigVs,
+                sigRs,
+                sigSs
+            ), "invalid instruction data");
     }
 
+    /**
+     * @dev Unlock collaterals for custodian and user
+     */
     function withdrawLockedTokens(
         bytes memory inst,
         uint heights,
@@ -169,20 +196,15 @@ contract PortalV3 is AdminPausable {
         uint8[] memory sigVs,
         bytes32[] memory sigRs,
         bytes32[] memory sigSs
-    ) isNotPaused nonReentrant public {
+    ) nonReentrant public {
         BurnInstData memory data = parseBurnInst(inst);
-        require((data.meta == 300 || data.meta == 301) && data.shard == 1); // Check instruction type
-        // Not withdrawed
-        require(!withdrawed[data.itx], "withdraw transaction already used");
+        // Check instruction type
+        // 170 custodian withdraw free collateral
+        // 171 custodian liquidated
+        // 172 custodian run away with public token
+        require(data.meta == 170 || data.meta == 171 || data.meta == 172, "metadata type is not allowed on portalv3");
+        require(!withdrawed[data.itx], "withdraw transaction already used"); // Not withdrawed
         withdrawed[data.itx] = true;
-
-        // Update decimal if not ETH coin
-        if (data.token != ETH_TOKEN) {
-            uint8 decimals = getDecimals(data.token);
-            if (decimals > 9) {
-                data.amount = data.amount * (10 ** (uint(decimals) - 9));
-            }
-        }
 
         verifyInst(
             inst,
@@ -198,15 +220,20 @@ contract PortalV3 is AdminPausable {
         );
 
         // Send and notify
-        if (data.token == ETH_TOKEN) {
-          (bool success, ) =  data.to.call{value: data.amount}("");
-          require(success, "internal transaction error");
-        } else {
-            IERC20(data.token).transfer(data.to, data.amount);
-            require(checkSuccess(), "internal transaction error");
+        for (uint8 i = 0; i < data.tokens.length; i++) {
+            if (data.tokens[i] != ETH_TOKEN) {
+                uint8 decimals = getDecimals(data.tokens[i]);
+                if (decimals > 9) {
+                    data.amounts[i] = data.amounts[i] * (10 ** (uint(decimals) - 9));
+                }
+                IERC20(data.tokens[i]).transfer(data.to, data.amounts[i]);
+                require(checkSuccess(), "internal transaction error");
+            } else {
+                (bool success,) = data.to.call{value : data.amounts[i]}("");
+                require(success, "internal transaction error");
+            }
         }
-
-        emit Withdraw(data.token, data.to, data.amount);
+        emit Withdraw(data.tokens, data.to, data.amounts);
     }
 
     /**
@@ -214,79 +241,75 @@ contract PortalV3 is AdminPausable {
      * @param inst: the full instruction, containing both metadata and body
      */
     function parseBurnInst(bytes memory inst) public pure returns (BurnInstData memory) {
+        require(inst.length >= 3, "Length of instruction must greater than 3");
         BurnInstData memory data;
         data.meta = uint8(inst[0]);
         data.shard = uint8(inst[1]);
-        address token;
+        uint8 numOfToken = uint8(inst[2]);
+        require(inst.length == 170 + 64 * uint16(numOfToken), "Invalid instruction");
+        address[] memory tokens = new address[](numOfToken);
         address payable to;
-        uint amount;
+        uint[] memory amounts = new uint[](numOfToken);
         bytes32 itx;
         assembly {
-            // skip first 0x20 bytes (stored length of inst)
-            token := mload(add(inst, 0x22)) // [3:34]
-            to := mload(add(inst, 0x42)) // [34:66]
-            amount := mload(add(inst, 0x62)) // [66:98]
-            itx := mload(add(inst, 0x82)) // [98:130]
+        // skip first 0x20 bytes (stored length of inst)
+        // skip the next 0x6A bytes (stored incognito address)
+            to := mload(add(inst, 0x8A)) // [138:170]
+            itx := mload(add(inst, add(0xAA, mul(0x40, numOfToken)))) // [170+64*x:]
         }
-        data.token = token;
+
+        // load tokens and amounts into array
+        for (uint8 i = 1; i <= numOfToken; i++) {
+            assembly {
+                mstore(add(tokens, mul(0x20, i)), mload(add(inst, add(0x6A, mul(i, 0x40)))))
+                mstore(add(amounts, mul(0x20, i)), mload(add(inst, add(0x8A, mul(i, 0x40)))))
+            }
+        }
+
+        data.tokens = tokens;
         data.to = to;
-        data.amount = amount;
+        data.amounts = amounts;
         data.itx = itx;
         return data;
     }
 
     /**
-     * @dev Update delegator address
-     * @param _delegator: delegator address
+     * @dev Payable receive function to receive Ether from oldVault when migrating
      */
-     function updateDelegatorAddress(address _delegator) external onlyAdmin isPaused {
-        delegator = _delegator;
-
-        Delegator(delegator);
-     }
+    receive() external payable {}
 
     /**
-     * @dev Update incognito proxy address
-     * @param _incognitoProxy: incognito proxy address
-     */
-     function updateIncognitoAddress(address _incognitoProxy) external onlyAdmin isPaused {
-        incognito = Incognito(_incognitoProxy);
-
-        IncognitoProxy(delegator);
-     }
-     
-     /**
-     * @dev Check if transfer() and transferFrom() of ERC20 succeeded or not
-     * This check is needed to fix https://github.com/ethereum/solidity/issues/4116
-     * This function is copied from https://github.com/AdExNetwork/adex-protocol-eth/blob/master/contracts/libs/SafeERC20.sol
-     */
+    * @dev Check if transfer() and transferFrom() of ERC20 succeeded or not
+    * This check is needed to fix https://github.com/ethereum/solidity/issues/4116
+    * This function is copied from https://github.com/AdExNetwork/adex-protocol-eth/blob/master/contracts/libs/SafeERC20.sol
+    */
     function checkSuccess() private pure returns (bool) {
-		uint256 returnValue = 0;
-		assembly {
-			// check number of bytes returned from last function call
-			switch returndatasize()
+        uint256 returnValue = 0;
+        assembly {
+        // check number of bytes returned from last function call
+            switch returndatasize()
 
-			// no bytes returned: assume success
-			case 0x0 {
-				returnValue := 1
-			}
+            // no bytes returned: assume success
+            case 0x0 {
+                returnValue := 1
+            }
 
-			// 32 bytes returned: check if non-zero
-			case 0x20 {
-				// copy 32 bytes into scratch space
-				returndatacopy(0x0, 0x0, 0x20)
+            // 32 bytes returned: check if non-zero
+            case 0x20 {
+            // copy 32 bytes into scratch space
+                returndatacopy(0x0, 0x0, 0x20)
 
-				// load those bytes into returnValue
-				returnValue := mload(0x0)
-			}
+            // load those bytes into returnValue
+                returnValue := mload(0x0)
+            }
 
-			// not sure what was returned: don't mark as success
-			default { }
-		}
-		return returnValue != 0;
-	}
-	
-	/**
+            // not sure what was returned: don't mark as success
+            default {}
+        }
+        return returnValue != 0;
+    }
+
+    /**
      * @dev Get the decimals of an ERC20 token, return 0 if it isn't defined
      * We check the returndatasize to covert both cases that the token has
      * and doesn't have the function decimals()
